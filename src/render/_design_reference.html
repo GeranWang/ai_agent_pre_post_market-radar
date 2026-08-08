@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<!--
+  brief.html.j2 — Lone Trail design (孤星) · Pre-market Radar structure
+  CSS source-of-truth: src/render/_design_reference.html
+  Design spec:         src/render/DESIGN.md
+  Before modifying: read both files above.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARC-01 / 2026.03.11 / PRE-MARKET RADAR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper:       #F4F2EC;
+    --paper-2:     #EDEAE2;
+    --ink:         #0A0908;
+    --ink-2:       #595550;
+    --ink-3:       #918C83;
+    --rule:        #D6D2C8;
+    --rule-soft:   #E5E1D6;
+    --amber:       #C8732C;
+    --amber-deep:  #8E4F1B;
+    --amber-soft:  rgba(200, 115, 44, 0.08);
+
+    --font-display: 'Inter Tight', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-body:    'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono:    'JetBrains Mono', 'SF Mono', Menlo, monospace;
+    --font-cjk:     'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: geometricPrecision;
+  }
+
+  body { padding: 80px 24px 120px; }
+
+  .sheet {
+    max-width: 720px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  /* ─────────── HEADER ─────────── */
+  .head {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 40px;
+    align-items: start;
+    padding-bottom: 64px;
+    margin-bottom: 64px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .head-greeting {
+    font-family: var(--font-display);
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--ink-2);
+    margin-bottom: 22px;
+    max-width: 30em;
+  }
+  .head-id {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    color: var(--ink-2);
+    margin-bottom: 56px;
+  }
+  .head-id .sep { color: var(--ink-3); margin: 0 8px; }
+
+  .head-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 64px;
+    line-height: 0.92;
+    letter-spacing: -0.045em;
+    margin-bottom: 8px;
+  }
+  .head-sub {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 14px;
+    letter-spacing: 0.02em;
+    color: var(--ink-2);
+  }
+  .head-coverage {
+    margin-top: 10px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    color: var(--ink-3);
+  }
+
+  /* Signal orb — signature element */
+  .signal { width: 96px; text-align: right; }
+  .signal-orb {
+    width: 80px;
+    height: 80px;
+    margin-left: auto;
+    margin-bottom: 14px;
+  }
+  .signal-orb svg { width: 100%; height: 100%; display: block; }
+  .signal-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    color: var(--ink-2);
+    line-height: 1.6;
+  }
+  .signal-label .state         { color: var(--amber); display: block; margin-top: 2px; font-weight: 500; }
+  .signal-label .state.nominal { color: var(--ink-3); font-weight: 400; }
+
+  /* ─────────── SECTION ─────────── */
+  .section { padding: 0 0 64px; }
+  .section:last-of-type { padding-bottom: 0; }
+
+  .section-head {
+    display: grid;
+    grid-template-columns: 40px 1fr auto;
+    gap: 24px;
+    align-items: baseline;
+    margin-bottom: 32px;
+  }
+  .section-num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--ink-3);
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 22px;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .section-title .cn {
+    font-family: var(--font-cjk);
+    font-weight: 400;
+    color: var(--ink-3);
+    font-size: 14px;
+    margin-left: 10px;
+    letter-spacing: 0.05em;
+  }
+  .section-meta {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--ink-3);
+  }
+
+  .section-body { padding-left: 64px; }
+
+  /* ─────────── 00 MARKET PULSE ─────────── */
+  .pulse-bias-key {
+    font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--ink-3); margin-bottom: 6px;
+  }
+  .pulse-bias-val {
+    font-family: var(--font-display); font-size: 20px; font-weight: 500;
+    letter-spacing: -0.015em; color: var(--ink); margin-bottom: 30px;
+  }
+  .pulse-themes { list-style: none; display: flex; flex-direction: column; gap: 9px; margin-bottom: 30px; }
+  .pulse-theme { display: grid; grid-template-columns: 28px 1fr; gap: 14px; align-items: baseline; }
+  .pulse-theme .n { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); letter-spacing: 0.1em; }
+  .pulse-theme .t { font-family: var(--font-body); font-size: 15px; color: var(--ink); }
+  .pulse-q-key { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 8px; }
+  .pulse-q {
+    font-family: var(--font-display); font-size: 18px; font-weight: 400; line-height: 1.45;
+    letter-spacing: -0.012em; color: var(--ink); max-width: 58ch; margin-bottom: 26px;
+  }
+  .pulse-conf { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-2); }
+  .pulse-conf .v { color: var(--ink); }
+  .pulse-caveat {
+    margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--rule);
+    font-size: 12.5px; line-height: 1.6; color: var(--ink-2); max-width: 34em;
+  }
+
+  /* ─────────── 01 PORTFOLIO READ ─────────── */
+  .pread-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 8px; }
+  .pread-posture {
+    font-family: var(--font-display); font-size: 18px; font-weight: 400; line-height: 1.45;
+    letter-spacing: -0.012em; color: var(--ink); max-width: 40em; margin-bottom: 30px;
+  }
+  .pread-ints { margin-bottom: 28px; }
+  .pread-int { font-family: var(--font-body); font-size: 15px; line-height: 1.65; color: var(--ink); max-width: 42em; margin: 0 0 12px; }
+  .pread-int .k { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-2); margin-right: 9px; }
+  .pread-int .hold { font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); margin-right: 10px; }
+  .pread-swing {
+    font-family: var(--font-display); font-size: 18px; font-weight: 400; line-height: 1.45;
+    letter-spacing: -0.012em; color: var(--ink); max-width: 42em; margin-bottom: 26px;
+  }
+  .pread-swing .cmd { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; color: var(--amber); margin-right: 11px; vertical-align: 1px; }
+
+  /* ─────────── POST-CLOSE (scorecard / movers / recap) ─────────── */
+  .score { padding: 13px 0; border-top: 1px solid var(--rule-soft); }
+  .score:first-child { border-top: none; padding-top: 0; }
+  .score-head { font-family: var(--font-body); font-size: 15px; line-height: 1.6; color: var(--ink); max-width: 44em; }
+  .score-head .v { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; color: var(--ink-2); margin-right: 9px; }
+  .score-head .v.miss { color: var(--amber); }
+  .score-body { font-family: var(--font-body); font-size: 13.5px; line-height: 1.6; color: var(--ink-3); max-width: 44em; margin-top: 4px; }
+  .score-body .k { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.12em; color: var(--ink-3); margin-right: 7px; }
+  .mover { font-family: var(--font-body); font-size: 15px; line-height: 1.6; color: var(--ink); max-width: 44em; margin-bottom: 10px; }
+  .mover .tk { font-family: var(--font-mono); font-size: 13px; color: var(--ink); margin-right: 8px; }
+  .mover .pc { font-family: var(--font-mono); font-size: 11px; color: var(--ink-2); margin-right: 10px; }
+
+  /* ─────────── 02 TELEMETRY ─────────── */
+  .telemetry {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    column-gap: 32px;
+    row-gap: 24px;
+  }
+  .tel-cell { padding-right: 16px; }
+  .tel-key {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: var(--ink-3);
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .tel-val {
+    font-family: var(--font-display);
+    font-size: 30px;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.025em;
+    margin-bottom: 8px;
+    color: var(--ink);
+  }
+  .tel-val .unit { font-size: 16px; color: var(--ink-3); font-weight: 400; margin-left: 2px; }
+  .tel-delta { font-family: var(--font-mono); font-size: 10px; color: var(--ink-2); letter-spacing: 0.04em; }
+  .tel-delta.flag { color: var(--amber); }
+  .tel-note { margin-top: 6px; font-size: 12px; line-height: 1.5; color: var(--ink-2); max-width: 22em; }
+
+  /* ─────────── 02 TOP SIGNALS ─────────── */
+  .signals { display: flex; flex-direction: column; }
+  .sig {
+    padding: 20px 0;
+    border-top: 1px solid var(--rule-soft);
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 18px;
+    align-items: baseline;
+  }
+  .sig:first-child { border-top: none; padding-top: 0; }
+  .sig:last-child  { padding-bottom: 0; }
+  .sig-rank { font-family: var(--font-mono); font-size: 13px; font-weight: 500; color: var(--amber); }
+  .sig-signal { font-family: var(--font-display); font-size: 16px; font-weight: 500; letter-spacing: -0.012em; color: var(--ink); margin-bottom: 6px; }
+  .sig-affected { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 8px; }
+  .sig-why { font-family: var(--font-body); font-size: 14px; line-height: 1.6; color: var(--ink); max-width: 62ch; margin-bottom: 8px; }
+  .sig-foot { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.04em; color: var(--ink-3); }
+  .sig-foot .sep { margin: 0 8px; color: var(--rule); }
+  .sig-foot .conf { color: var(--ink-2); }
+  .signals-empty { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; color: var(--ink-3); }
+
+  /* ─────────── 03 ASSET IMPACT ─────────── */
+  .asset-list { display: flex; flex-direction: column; }
+  .asset {
+    padding: 24px 0;
+    border-top: 1px solid var(--rule-soft);
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .asset:first-child { border-top: none; padding-top: 0; }
+  .asset:last-child  { padding-bottom: 0; }
+
+  .asset-head {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 18px;
+    align-items: baseline;
+  }
+  .asset-id { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .asset-ticker {
+    font-family: var(--font-mono);
+    font-size: 17px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+  }
+  .asset-role {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: var(--ink-3);
+    text-transform: uppercase;
+  }
+  .asset-state {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    color: var(--ink-3);
+  }
+  .asset-state.watch { color: var(--amber); }
+  .asset-state.watch::before {
+    content: '';
+    display: inline-block;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--amber);
+    margin-right: 6px;
+    vertical-align: 1px;
+  }
+  .asset-state.alert { color: var(--ink); font-weight: 500; }
+
+  .asset-price  { font-family: var(--font-mono); font-size: 14px; color: var(--ink); }
+  .asset-change { font-family: var(--font-mono); font-size: 14px; min-width: 64px; text-align: right; color: var(--ink); }
+  .asset-change.na { color: var(--ink-3); }
+  .asset-change .arr { color: var(--ink-3); margin-right: 3px; }
+
+  /* Section 03 pre-market snapshot table — borderless, hairline header only */
+  .snapshot { width: 100%; border-collapse: collapse; margin-bottom: 36px; }
+  .snapshot th {
+    font-family: var(--font-mono); font-size: 9px; font-weight: 400;
+    letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3);
+    text-align: left; padding: 0 0 8px; border-bottom: 1px solid var(--rule);
+  }
+  .snapshot th.num, .snapshot td.num { text-align: right; }
+  .snapshot td {
+    font-family: var(--font-mono); font-size: 13px; color: var(--ink);
+    padding: 9px 0; border-bottom: 1px solid var(--rule-soft);
+  }
+  .snapshot td.state { color: var(--ink-2); font-size: 11px; letter-spacing: 0.04em; }
+  /* Gains/losses are NOT colored (DESIGN.md §3.2) — direction reads from the ↑/↓ glyph + sign. */
+  .snapshot td.chg      { color: var(--ink); }
+  .snapshot td.chg.na   { color: var(--ink-3); }
+  .snapshot td.chg .arr { color: var(--ink-3); margin-right: 3px; }
+  .snapshot-note { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.04em; color: var(--ink-3); margin: -24px 0 36px; }
+
+  .ai-lines { display: flex; flex-direction: column; gap: 9px; }
+  .ai-line { display: grid; grid-template-columns: 60px 1fr; gap: 16px; align-items: baseline; }
+  .ai-key { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-3); }
+  .ai-val { font-family: var(--font-body); font-size: 14px; line-height: 1.6; color: var(--ink); max-width: 60ch; }
+  .ai-val.conf { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; color: var(--ink-2); text-transform: uppercase; }
+  .asset-meta {
+    display: flex; flex-wrap: wrap; gap: 24px;
+    font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); letter-spacing: 0.08em;
+  }
+  .asset-meta strong { color: var(--ink); font-weight: 500; }
+
+  /* ─────────── 04 WATCH AFTER OPEN ─────────── */
+  .watch-list { list-style: none; display: flex; flex-direction: column; gap: 13px; }
+  .watch-item { display: grid; grid-template-columns: 28px 1fr; gap: 14px; align-items: baseline; }
+  .watch-item .n { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); letter-spacing: 0.1em; }
+  .watch-item .q { font-family: var(--font-body); font-size: 14.5px; line-height: 1.6; color: var(--ink); max-width: 62ch; }
+
+  /* ─────────── 05 EVENT WATCH ─────────── */
+  .cats { display: flex; flex-direction: column; }
+  .cat {
+    display: grid;
+    grid-template-columns: 100px 56px 1fr 56px;
+    gap: 20px;
+    padding: 14px 0;
+    border-top: 1px solid var(--rule-soft);
+    align-items: baseline;
+  }
+  .cat:first-child { border-top: none; padding-top: 0; }
+  .cat-time  { font-family: var(--font-mono); font-size: 11px; color: var(--ink-2); letter-spacing: 0.05em; }
+  .cat-tk    { font-family: var(--font-mono); font-size: 11px; color: var(--ink); font-weight: 500; }
+  .cat-desc  { font-size: 13.5px; color: var(--ink); }
+  .cat-desc .why { color: var(--ink-3); }
+  .cat-pri   { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.2em; color: var(--ink-3); text-align: right; }
+  .cat-pri.med  { color: var(--ink-2); }
+  .cat-pri.high { color: var(--amber); }
+
+  /* ─────────── 06 FILTERED (collapsible) ─────────── */
+  .filtered-section { padding: 0 0 64px; }
+  details summary {
+    list-style: none;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    color: var(--ink-3);
+    padding: 16px 0;
+    border-top: 1px solid var(--rule-soft);
+    user-select: none;
+  }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::before { content: '▶'; font-size: 7px; margin-right: 8px; }
+  details[open] summary::before { content: '▼'; }
+
+  .fil-list { list-style: none; padding-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .fil-item { font-family: var(--font-body); font-size: 13px; color: var(--ink-3); display: flex; gap: 10px; flex-wrap: wrap; }
+  .fil-hl   { color: var(--ink-2); }
+  .fil-reason { font-style: italic; }
+
+  /* ─────────── 07 SOURCE QUALITY ─────────── */
+  .srcq { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; color: var(--ink-3); }
+  .srcq .sep { margin: 0 6px; color: var(--rule); }
+  .srcq .conf-v { color: var(--ink); }
+  .srcq-limit { font-family: var(--font-body); font-style: italic; font-size: 12px; color: var(--ink-3); margin-top: 10px; max-width: 60ch; }
+
+  /* ─────────── FOOTER ─────────── */
+  .foot {
+    margin-top: 64px;
+    padding-top: 32px;
+    border-top: 1px solid var(--rule);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 20px;
+    align-items: baseline;
+  }
+  .foot-end { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.3em; color: var(--ink); }
+  .foot-src { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.15em; color: var(--ink-3); text-align: right; }
+  .foot-legal { margin-top: 20px; max-width: 62ch; }
+  .foot-legal p { font-family: var(--font-body); font-size: 11px; line-height: 1.6; color: var(--ink-3); margin: 0 0 8px; }
+  .foot-legal p.disc { color: var(--ink-2); }
+  .foot-legal a { color: var(--ink-2); }
+  .foot-legal .cpr { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.1em; color: var(--ink-3); margin-top: 12px; }
+
+  /* ─────────── RESPONSIVE ─────────── */
+  @media (max-width: 640px) {
+    body { padding: 40px 18px 80px; }
+    .head { grid-template-columns: 1fr; gap: 32px; padding-bottom: 48px; margin-bottom: 48px; }
+    .signal { width: auto; text-align: left; }
+    .signal-orb { margin-left: 0; }
+    .head-title { font-size: 44px; }
+    .section-head { grid-template-columns: 32px 1fr; gap: 16px; }
+    .section-meta { grid-column: 2; margin-top: -8px; }
+    .section-body { padding-left: 0; }
+    .telemetry { grid-template-columns: repeat(2, 1fr); row-gap: 24px; }
+    .cat { grid-template-columns: 90px 1fr; gap: 12px; }
+    .cat-tk   { grid-column: 1; }
+    .cat-desc { grid-column: 1 / -1; }
+    .cat-pri  { grid-column: 1 / -1; text-align: left; }
+  }
+</style>
+</head>
+<body>
+
+<div class="sheet">
+
+  <!-- ═════════════ HEADER ═════════════ -->
+  <header class="head">
+    <div>
+      
+      <div class="head-greeting">早安,Sample Reader。这是 3 月 11 日(周三)的盘前雷达 —— 祝你今天交易顺利。</div>
+      <div class="head-id">
+        ARC-01<span class="sep">·</span>2026.03.11<span class="sep">·</span>09:00 ET<span class="sep">·</span>DAY 70 / FY26
+      </div>
+      <h1 class="head-title">Pre-market<br>Radar</h1>
+      <div class="head-sub">3 assets <span class="sep">·</span> 3 signals <span class="sep">·</span> 3 events</div>
+      <div class="head-coverage">覆盖 昨日 16:00 ET 收盘 → 今早 · 投递 09:00 ET</div>
+    </div>
+
+    <div class="signal">
+      <div class="signal-orb">
+        <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="40" cy="40" r="38" fill="none" stroke="#0A0908" stroke-width="0.5"/>
+          <line x1="40" y1="2"  x2="40" y2="7"  stroke="#0A0908" stroke-width="0.5"/>
+          <line x1="40" y1="73" x2="40" y2="78" stroke="#0A0908" stroke-width="0.5"/>
+          <line x1="2"  y1="40" x2="7"  y2="40" stroke="#0A0908" stroke-width="0.5"/>
+          <line x1="73" y1="40" x2="78" y2="40" stroke="#0A0908" stroke-width="0.5"/>
+          
+          <path d="M 40 10 A 30 30 0 0 1 70 40" fill="none" stroke="#C8732C" stroke-width="0.8"/>
+          
+          <circle cx="40" cy="40" r="18" fill="none" stroke="#0A0908" stroke-width="0.6"/>
+          
+          <path d="M 40 22 A 18 18 0 0 1 40 58 L 40 40 Z" fill="#C8732C" opacity="0.85"/>
+          
+          <circle cx="62" cy="22" r="2" fill="#C8732C"/>
+          <circle cx="62" cy="22" r="5" fill="none" stroke="#C8732C" stroke-width="0.4" opacity="0.5"/>
+          <line x1="38" y1="40" x2="42" y2="40" stroke="#0A0908" stroke-width="0.4"/>
+          <line x1="40" y1="38" x2="40" y2="42" stroke="#0A0908" stroke-width="0.4"/>
+        </svg>
+      </div>
+      <div class="signal-label">
+        SIGNAL
+        <span class="state">AMBER</span>
+      </div>
+    </div>
+  </header>
+
+  
+  <!-- ═════════════ 00 — MARKET PULSE ═════════════ -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">00</span>
+      <h2 class="section-title">Market Pulse <span class="cn">脉象</span></h2>
+      <span class="section-meta">30-SECOND READ</span>
+    </div>
+    <div class="section-body">
+      <div class="pulse-bias-key">Bias</div>
+      <div class="pulse-bias-val">混合 / 利率驱动</div>
+      <ul class="pulse-themes">
+        
+        <li class="pulse-theme"><span class="n">01</span><span class="t">长端收益率续升,压制高久期资产估值</span></li>
+        
+        <li class="pulse-theme"><span class="n">02</span><span class="t">云资本开支指引成为科技股分歧点</span></li>
+        
+        <li class="pulse-theme"><span class="n">03</span><span class="t">美元走强,黄金与新兴市场同步承压</span></li>
+        
+      </ul>
+      <div class="pulse-q-key">Key question</div>
+      <p class="pulse-q">10年期美债收益率站上4.40%之后,科技股的估值折价会否从长久期扩散到现金流稳定的大市值?</p>
+      <div class="pulse-conf">Confidence <span class="v">Medium</span></div>
+      <p class="pulse-caveat">盘前成交清淡,方向性结论待开盘后成交量确认。</p>
+    </div>
+  </section>
+
+  <!-- ═════════════ 01 — PORTFOLIO READ ═════════════ -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">01</span>
+      <h2 class="section-title">Portfolio Read <span class="cn">持仓合成</span></h2>
+      <span class="section-meta">CROSS-HOLDING</span>
+    </div>
+    <div class="section-body">
+      
+      <div class="pread-posture">组合整体偏防守:两只权益持仓共享同一个利率贴现因子,而唯一的对冲仓位今日与它们同向下跌。</div>
+      <div class="pread-ints">
+        
+        <p class="pread-int"><span class="k">Shared driver</span><span class="hold">AAPL·MSFT</span>两者同受长端收益率上行压制,分散度低于表面——共同承担的是同一个贴现率风险。</p>
+        
+        <p class="pread-int"><span class="k">Hedge failure</span><span class="hold">TLT·AAPL</span>长债本应在权益回撤时提供缓冲,但今日收益率上行使其与权益同向,对冲暂时失效。</p>
+        
+        <p class="pread-int"><span class="k">Ripple</span>若云资本开支指引下修,冲击会从MSFT经供应链传导至半导体,再回到以科技为主的宽基敞口。</p>
+      </div>
+      <div class="pread-swing"><span class="cmd">命门</span>10年期美债收益率能否在4.45%之下企稳——这决定今天是估值调整还是趋势反转。</div>
+      
+      <div class="pread-label">盯盘 Watch</div>
+      <ul class="watch-list">
+        
+        <li class="watch-item"><span class="n">01</span><span class="q">长端收益率日内是否回落至4.35%下方</span></li>
+        
+        <li class="watch-item"><span class="n">02</span><span class="q">美元指数走强是否延续,以及对海外营收占比高的持仓的影响</span></li>
+        
+        <li class="watch-item"><span class="n">03</span><span class="q">科技板块成交量能否配合价格企稳</span></li>
+        
+      </ul>
+      
+    </div>
+  </section>
+
+  <!-- ═════════════ 02 — TELEMETRY ═════════════ -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">02</span>
+      <h2 class="section-title">Telemetry <span class="cn">遥测</span></h2>
+      <span class="section-meta">22:59 SNAPSHOT</span>
+    </div>
+    <div class="section-body">
+      <div class="telemetry">
+        
+        <div class="tel-cell">
+          <div class="tel-key">DGS2</div>
+          <div class="tel-val">3.92<span class="unit">%</span></div>
+          <div class="tel-delta">+4个基点</div>
+          
+        </div>
+        
+        <div class="tel-cell">
+          <div class="tel-key">DGS10</div>
+          <div class="tel-val">4.41<span class="unit">%</span></div>
+          <div class="tel-delta flag">+9个基点</div>
+          <div class="tel-note">本周第三日上行,长端定价的是期限溢价而非加息预期。</div>
+        </div>
+        
+        <div class="tel-cell">
+          <div class="tel-key">DXY</div>
+          <div class="tel-val">103.18<span class="unit"></span></div>
+          <div class="tel-delta">+0.31%</div>
+          
+        </div>
+        
+        <div class="tel-cell">
+          <div class="tel-key">VIX</div>
+          <div class="tel-val">17.60<span class="unit"></span></div>
+          <div class="tel-delta">+1.4</div>
+          
+        </div>
+        
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════ 03 — TOP SIGNALS (collapsible) ═════════════ -->
+  
+  <div class="filtered-section">
+    <details>
+      <summary>03 · TOP SIGNALS · 信号 · 3 CLEARED GATE</summary>
+      <div class="signals" style="margin-top:20px;">
+        
+        <div class="sig">
+          <span class="sig-rank">1</span>
+          <div class="sig-main">
+            <div class="sig-signal">10年期美债收益率升至4.41%,为三周高位</div>
+            <div class="sig-affected">AAPL · MSFT · TLT</div>
+            <div class="sig-why">长端利率是组合内三只持仓的共同贴现因子,直接压制估值并使债券对冲失效。</div>
+            <div class="sig-foot">Official · New · High impact<span class="sep">·</span><span class="conf">Conf High</span></div>
+          </div>
+        </div>
+        
+        <div class="sig">
+          <span class="sig-rank">2</span>
+          <div class="sig-main">
+            <div class="sig-signal">据隔夜报道,某大型云厂商下调下季度资本开支指引</div>
+            <div class="sig-affected">MSFT · NVDA</div>
+            <div class="sig-why">资本开支是AI硬件需求的领先指标,指引下修会先反映在半导体订单预期上。</div>
+            <div class="sig-foot">Secondary · New · Medium impact<span class="sep">·</span><span class="conf">Conf Medium</span></div>
+          </div>
+        </div>
+        
+        <div class="sig">
+          <span class="sig-rank">3</span>
+          <div class="sig-main">
+            <div class="sig-signal">美元指数连续第四日走强</div>
+            <div class="sig-affected">AAPL</div>
+            <div class="sig-why">海外营收占比高的持仓面临汇兑逆风,通常在财报季前被重新定价。</div>
+            <div class="sig-foot">Official · Recent · Low impact<span class="sep">·</span><span class="conf">Conf Medium</span></div>
+          </div>
+        </div>
+        
+      </div>
+    </details>
+  </div>
+  
+
+  <!-- ═════════════ 03 — ASSET IMPACT ═════════════ -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">04</span>
+      <h2 class="section-title">Asset Impact <span class="cn">标的</span></h2>
+      <span class="section-meta">3 TRACKED</span>
+    </div>
+    <div class="section-body">
+      <table class="snapshot">
+        <thead>
+          <tr><th>Ticker</th><th>State</th><th class="num">Price</th><th class="num">Chg %</th></tr>
+        </thead>
+        <tbody>
+          
+          
+          
+          <tr>
+            <td>AAPL</td>
+            <td class="state">Watch</td>
+            <td class="num">224.15</td>
+            <td class="num chg down"><span class="arr">↓</span>-0.6%</td>
+          </tr>
+          
+          
+          
+          <tr>
+            <td>MSFT</td>
+            <td class="state">Alert</td>
+            <td class="num">408.30</td>
+            <td class="num chg down"><span class="arr">↓</span>-1.2%</td>
+          </tr>
+          
+          
+          
+          <tr>
+            <td>TLT</td>
+            <td class="state">Watch</td>
+            <td class="num">88.40</td>
+            <td class="num chg down"><span class="arr">↓</span>-0.8%</td>
+          </tr>
+          
+        </tbody>
+      </table>
+      
+      <details class="asset-details">
+        <summary>逐标的详情 · 3 assets</summary>
+        <div class="asset-list">
+        
+        
+        
+        
+        
+        <div class="asset">
+          <div class="asset-head">
+            <div class="asset-id">
+              <span class="asset-ticker">AAPL</span>
+              <span class="asset-role">核心权益敞口</span>
+              <span class="asset-state watch">Watch</span>
+            </div>
+            <span class="asset-price">224.15</span>
+            <span class="asset-change "><span class="arr">↓</span>-0.6%</span>
+          </div>
+          <div class="ai-lines">
+            <div class="ai-line"><span class="ai-key">News</span><span class="ai-val">无点名新闻;盘前随大盘走弱,美元走强构成汇兑逆风。</span></div>
+            <div class="ai-line"><span class="ai-key">Impact</span><span class="ai-val">长端收益率上行压制估值倍数;海外营收占比高,美元每走强1%对折算营收构成约0.4%的拖累。</span></div>
+            <div class="ai-line"><span class="ai-key">Watch</span><span class="ai-val">能否守住222附近的前低——跌破则回撤从估值调整变为趋势破位。</span></div>
+            <div class="ai-line"><span class="ai-key">Conf</span><span class="ai-val conf">Medium</span></div>
+          </div>
+          
+          <div class="asset-meta">
+            
+            <span>板块 <strong>大市值科技</strong></span>
+            
+            <span>敏感度 <strong>利率 · 美元</strong></span>
+            
+          </div>
+          
+        </div>
+        
+        
+        
+        
+        
+        <div class="asset">
+          <div class="asset-head">
+            <div class="asset-id">
+              <span class="asset-ticker">MSFT</span>
+              <span class="asset-role">核心权益敞口</span>
+              <span class="asset-state alert">Alert</span>
+            </div>
+            <span class="asset-price">408.30</span>
+            <span class="asset-change "><span class="arr">↓</span>-1.2%</span>
+          </div>
+          <div class="ai-lines">
+            <div class="ai-line"><span class="ai-key">News</span><span class="ai-val">据隔夜报道,同业下调云业务资本开支指引,板块盘前普遍走弱。</span></div>
+            <div class="ai-line"><span class="ai-key">Impact</span><span class="ai-val">资本开支指引若确认下修,AI相关营收预期需重估;该风险经供应链二阶传导至半导体持仓。</span></div>
+            <div class="ai-line"><span class="ai-key">Watch</span><span class="ai-val">410的整数关口与开盘后半小时成交量;放量跌破意味着机构在减仓而非散户情绪。</span></div>
+            <div class="ai-line"><span class="ai-key">Conf</span><span class="ai-val conf">Medium</span></div>
+          </div>
+          
+          <div class="asset-meta">
+            
+            <span>板块 <strong>软件 · 云</strong></span>
+            
+            <span>敏感度 <strong>AI资本开支</strong></span>
+            
+          </div>
+          
+        </div>
+        
+        
+        
+        
+        
+        <div class="asset">
+          <div class="asset-head">
+            <div class="asset-id">
+              <span class="asset-ticker">TLT</span>
+              <span class="asset-role">久期对冲</span>
+              <span class="asset-state watch">Watch</span>
+            </div>
+            <span class="asset-price">88.40</span>
+            <span class="asset-change "><span class="arr">↓</span>-0.8%</span>
+          </div>
+          <div class="ai-lines">
+            <div class="ai-line"><span class="ai-key">News</span><span class="ai-val">长端收益率续升,长债价格同步走低。</span></div>
+            <div class="ai-line"><span class="ai-key">Impact</span><span class="ai-val">今日与权益同向下跌,对冲功能暂时失效——组合的有效分散度低于配置时的假设。</span></div>
+            <div class="ai-line"><span class="ai-key">Watch</span><span class="ai-val">收益率若回落至4.35%下方,对冲关系可望恢复;否则组合实际是单因子暴露。</span></div>
+            <div class="ai-line"><span class="ai-key">Conf</span><span class="ai-val conf">Medium</span></div>
+          </div>
+          
+          <div class="asset-meta">
+            
+            <span>久期 <strong>长</strong></span>
+            
+            <span>敏感度 <strong>期限溢价</strong></span>
+            
+          </div>
+          
+        </div>
+        
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ═════════════ 05 — EVENT WATCH ═════════════ -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">05</span>
+      <h2 class="section-title">Event Watch <span class="cn">事件</span></h2>
+      <span class="section-meta">NEXT 72H</span>
+    </div>
+    <div class="section-body">
+      
+      <div class="cats">
+        
+        
+        <div class="cat">
+          <span class="cat-time">今日 08:30 ET</span>
+          <span class="cat-tk">全组合</span>
+          <span class="cat-desc">美国消费者物价指数(2月) <span class="why">· 核心通胀读数直接决定长端收益率的下一步方向。</span></span>
+          <span class="cat-pri high">HIGH</span>
+        </div>
+        
+        
+        <div class="cat">
+          <span class="cat-time">明日 14:00 ET</span>
+          <span class="cat-tk">TLT · 全组合</span>
+          <span class="cat-desc">联邦公开市场委员会会议纪要 <span class="why">· 纪要中对期限溢价的表述会影响长端定价。</span></span>
+          <span class="cat-pri med">MED</span>
+        </div>
+        
+        
+        <div class="cat">
+          <span class="cat-time">周四 盘后</span>
+          <span class="cat-tk">MSFT · NVDA</span>
+          <span class="cat-desc">NVDA 财报 <span class="why">· AI资本开支链条的关键验证点。</span></span>
+          <span class="cat-pri med">MED</span>
+        </div>
+        
+      </div>
+      
+    </div>
+  </section>
+
+  <!-- ═════════════ 06 — FILTERED (collapsible) ═════════════ -->
+  
+  <div class="filtered-section">
+    <details>
+      <summary>06 · FILTERED / LOW SIGNAL · 4 ITEMS</summary>
+      <ul class="fil-list">
+        
+        <li class="fil-item">
+          <span class="fil-hl">某分析师上调科技板块目标价</span>
+          <span class="fil-reason">— 评级变动不改变基本面,且未点名持仓。</span>
+        </li>
+        
+        <li class="fil-item">
+          <span class="fil-hl">欧洲央行维持利率不变</span>
+          <span class="fil-reason">— 符合预期,对美元与美债无增量影响。</span>
+        </li>
+        
+        <li class="fil-item">
+          <span class="fil-hl">原油库存超预期增加</span>
+          <span class="fil-reason">— 组合无能源敞口,传导路径过长。</span>
+        </li>
+        
+        <li class="fil-item">
+          <span class="fil-hl">社交平台流传的并购传闻</span>
+          <span class="fil-reason">— 来源为社交媒体,无二次确认,不进主报告。</span>
+        </li>
+        
+      </ul>
+    </details>
+  </div>
+  
+
+  <!-- ═════════════ 07 — SOURCE QUALITY (collapsible) ═════════════ -->
+  
+  <div class="filtered-section">
+    <details>
+      <summary>07 · SOURCE QUALITY · 来源 · Report confidence Medium</summary>
+      <div class="srcq" style="margin-top:20px;">
+        2 official <span class="sep">·</span> 1 tier-1 <span class="sep">·</span> 6 secondary <span class="sep">·</span> 2 inference
+        <span class="sep">·</span> Report confidence <span class="conf-v">Medium</span>
+      </div>
+      
+      <div class="srcq-limit">多数条目来自聚合平台,原始通讯社不可得;宏观数字取自官方发布。</div>
+      
+    </details>
+  </div>
+  
+
+  <!-- ═════════════ DATA SOURCES (collapsible · shared) ═════════════ -->
+  <div class="filtered-section">
+    <details>
+      <summary>数据源 · DATA SOURCES</summary>
+      <ul class="fil-list">
+        <li class="fil-item"><span class="fil-hl">Finnhub</span><span class="fil-reason">— 公司新闻 + 财报日历</span></li>
+        <li class="fil-item"><span class="fil-hl">ForexFactory</span><span class="fil-reason">— 经济日历（预期 / 前值）</span></li>
+        <li class="fil-item"><span class="fil-hl">SEC EDGAR</span><span class="fil-reason">— 8-K / Form 4 / 10-Q 备案</span></li>
+        <li class="fil-item"><span class="fil-hl">US Treasury</span><span class="fil-reason">— 国债收益率（DGS2 / DGS10）</span></li>
+        <li class="fil-item"><span class="fil-hl">Yahoo Finance (yfinance)</span><span class="fil-reason">— 盘前价格 + DXY + VIX</span></li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- ═════════════ FOOTER ═════════════ -->
+  <footer class="foot">
+    <div class="foot-end">END · ARC-01</div>
+    <div class="foot-src">Finnhub · SEC EDGAR · US Treasury · Yahoo Finance</div>
+  </footer>
+  <div class="foot-legal">
+    <p class="disc"><strong>免责声明</strong> · 本简报仅供参考与教育用途，不构成投资建议、要约或买卖推荐；据此操作风险自负，请自行研究（DYOR）。 <a href="https://example.com/terms">完整条款</a>。</p>
+    <p>由 AI 基于第三方数据自动生成，可能存在错误或延迟，行动前请自行核实；数据按“现状”提供，不保证准确、完整或及时。本简报覆盖你本人配置的持仓。 <a href="https://example.com/how-it-works">方法论</a>。</p>
+    <p class="cpr">© 2026 Pre-market Radar · 保留所有权利 · support@example.com · <a href="https://example.com/unsubscribe">退订 Unsubscribe</a> · 123 Example St, City, ST 00000</p>
+  </div>
+
+</div>
+
+</body>
+</html>

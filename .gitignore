@@ -1,0 +1,20 @@
+.env
+.venv/
+# Local-only notes (product strategy, pricing) — never published.
+# Naming convention, not a blanket docs/ ignore: a future public doc under
+# docs/ should not be silently swallowed.
+*.local.md
+
+# Personal: real holdings + owner name. Ship config/tickers.example.yaml instead.
+config/tickers.yaml
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+.idea/
+# Generated briefs, intermediates, scheduler state and logs. All contain real
+# holdings data, and all are regenerable — nothing here belongs in the repo.
+# The pipeline mkdir()s what it needs, so no placeholder file is required.
+output/
+*.egg-info/
+dist/

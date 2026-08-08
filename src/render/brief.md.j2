@@ -1,0 +1,247 @@
+{% set post = brief.report_type == 'postclose' %}
+{% if greeting %}{{ greeting }}
+
+{% endif %}{{ brief.mission_designator }} · {{ brief.date | replace('-', '.') }} · {{ '16:00 ET · 收盘后' if post else '09:00 ET' }} · DAY {{ day_number | default('—') }} / FY{{ brief.date[2:4] }}
+
+# {{ 'Post-close Radar' if post else 'Pre-market Radar' }}
+
+{% if post %}{{ brief.assets | length }} assets · {{ brief.movers | length }} movers · {{ brief.scorecard | length }} 对账{% else %}{{ brief.assets | length }} assets · {{ brief.top_signals | length }} signals · {{ brief.events | length }} events{% endif %}
+{% if coverage %}
+*{{ coverage }}*
+{% endif %}
+
+Signal: **{{ brief.signal_state }}**
+
+{% if post %}
+## 00 · Close Pulse 收盘脉象
+
+**Bias** — {{ brief.close_pulse.bias }}
+
+{% for theme in brief.close_pulse.themes %}
+{{ loop.index }}. {{ theme }}
+{% endfor %}
+
+**Takeaway** — {{ brief.close_pulse.takeaway }}
+
+Confidence: **{{ brief.close_pulse.confidence }}**
+{% if brief.close_pulse.caveat %}
+
+> {{ brief.close_pulse.caveat }}
+{% endif %}
+
+
+## 01 · Scorecard 复盘对账
+
+{% if brief.scorecard %}
+{% for s in brief.scorecard %}
+- **[{{ s.verdict }}]** {{ s.item }}
+  晨报 — {{ s.morning_view }}
+  实际 — {{ s.actual }}
+{% endfor %}
+{% else %}
+{{ brief.scorecard_note or '无当日晨报可对比。' }}
+{% endif %}
+
+
+## 02 · Telemetry 遥测
+
+| Indicator | Value | Delta |
+|-----------|-------|-------|
+{% for t in brief.telemetry -%}
+| {{ t.key }} | {{ t.value }}{{ t.unit }} | {% if t.flag %}**{{ t.delta }}**{% else %}{{ t.delta }}{% endif %} |
+{% endfor %}
+{% for t in brief.telemetry if t.flag and t.note %}
+- **{{ t.key }}** — {{ t.note }}
+{%- endfor %}
+
+
+## 03 · Movers 今日异动
+
+{% if brief.movers %}
+{% for m in brief.movers %}
+- **{{ m.ticker }}** {% if m.change_pct is not none %}{{ "%+.1f%%" | format(m.change_pct) }}{% endif %} — {{ m.note }}
+{% endfor %}
+{% else %}
+今日无显著异动。
+{% endif %}
+
+
+## 04 · Asset Recap 标的复盘
+
+| Ticker | State | Close | Day % |
+|--------|-------|-------|-------|
+{% for a in brief.assets -%}
+| {{ a.ticker }} | {{ a.state }} | {{ ("%.2f" | format(a.close_price)) if a.close_price is not none else "—" }} | {% if a.change_pct is none %}—{% else %}{{ "%+.1f%%" | format(a.change_pct) }}{% endif %} |
+{% endfor %}
+
+{% for a in brief.assets %}
+**{{ a.ticker }}** · {{ a.role }} · {{ a.state }}
+
+- **What** — {{ a.what_happened }}
+- **Read** — {{ a.read }}
+- **Watch** — {{ a.watch }}
+- **Conf** — {{ a.confidence }}
+{% if a.meta %}
+
+{{ a.meta.items() | map('join', ' ') | join(' · ') }}
+{% endif %}
+
+{% endfor %}
+
+
+## 05 · After Hours & Tomorrow 盘后·明日
+
+{% if brief.after_hours %}
+{% for w in brief.after_hours %}
+- {{ w }}
+{% endfor %}
+{% endif %}
+{% if brief.tomorrow %}
+
+| Time | Affected | Event | Priority |
+|------|----------|-------|----------|
+{% for e in brief.tomorrow -%}
+| {{ e.time }} | {{ e.affected }} | {{ e.event }}{% if e.why %} · {{ e.why }}{% endif %} | {% if e.priority == 'HIGH' %}**{{ e.priority }}**{% else %}{{ e.priority }}{% endif %} |
+{% endfor %}
+{% endif %}
+{% if not brief.after_hours and not brief.tomorrow %}
+盘后无异动,72 小时窗口内无排定催化剂。
+{% endif %}
+
+{% if brief.filtered %}
+*06 · 已过滤 {{ brief.filtered | length }} 条（逐条理由见网页存档版）。*
+{% endif %}
+
+{% set sq = brief.source_quality %}
+*07 · 来源 — {{ sq.official }} official · {{ sq.tier1 }} tier-1 · {{ sq.secondary }} secondary · {{ sq.inference }} inference · Report confidence {{ sq.report_confidence }}{% if sq.limitation %} · {{ sq.limitation }}{% endif %}*
+
+{% else %}
+## 00 · Market Pulse 脉象
+
+**Bias** — {{ brief.market_pulse.bias }}
+
+{% for theme in brief.market_pulse.themes %}
+{{ loop.index }}. {{ theme }}
+{% endfor %}
+
+**Key question** — {{ brief.market_pulse.key_question }}
+
+Confidence: **{{ brief.market_pulse.confidence }}**
+{% if brief.market_pulse.caveat %}
+
+> {{ brief.market_pulse.caveat }}
+{% endif %}
+
+
+## 01 · Portfolio Read 持仓合成
+
+{{ brief.portfolio_read.posture }}
+
+{% for it in brief.portfolio_read.interactions %}
+- **{{ it.kind }}** · {{ it.holdings | join('·') }} — {{ it.note }}
+{% endfor %}
+{%- if brief.portfolio_read.ripple %}
+- **Ripple** — {{ brief.portfolio_read.ripple }}
+{% endif %}
+
+**命门 Swing** — {{ brief.portfolio_read.swing }}
+
+{% if brief.portfolio_read.watch %}
+**盯盘 Watch**
+
+{% for w in brief.portfolio_read.watch %}
+{{ loop.index }}. {{ w }}
+{% endfor %}
+{% endif %}
+
+
+## 02 · Telemetry 遥测
+
+| Indicator | Value | Delta |
+|-----------|-------|-------|
+{% for t in brief.telemetry -%}
+| {{ t.key }} | {{ t.value }}{{ t.unit }} | {% if t.flag %}**{{ t.delta }}**{% else %}{{ t.delta }}{% endif %} |
+{% endfor %}
+{% for t in brief.telemetry if t.flag and t.note %}
+- **{{ t.key }}** — {{ t.note }}
+{%- endfor %}
+
+
+## 03 · Top Signals 信号
+
+{% if brief.top_signals %}
+{% for s in brief.top_signals %}
+**{{ s.rank }} · {{ s.signal }}**{% if s.affected %} — {{ s.affected | join(' · ') }}{% endif %} · *{{ s.label.source }} · {{ s.label.freshness | capitalize }} · {{ s.label.impact }}*
+{% endfor %}
+{% else %}
+本场没有与组合相关的信号通过相关性闸门。
+
+{% endif %}
+
+## 04 · Asset Impact 标的
+
+| Ticker | State | Price | Chg % |
+|--------|-------|-------|-------|
+{% for a in brief.assets -%}
+| {{ a.ticker }} | {{ a.state }} | {{ ("%.2f" | format(a.price)) if a.price is not none else "—" }} | {% if a.change_pct is none %}—{% else %}{% if a.change_pct > 0 %}↑ {% elif a.change_pct < 0 %}↓ {% endif %}{{ "%+.1f%%" | format(a.change_pct) }}{% endif %} |
+{% endfor %}
+{% if brief.assets and brief.assets | selectattr('change_pct', 'none') | list | length == brief.assets | length %}
+> 盘前尚未开盘 · 价格为上一交易日收盘,开盘前变动暂不可用
+{% endif %}
+
+{% for a in brief.assets %}
+{% set chg_str = (("↑ " if a.change_pct > 0 else "↓ " if a.change_pct < 0 else "") ~ ("%+.1f%%" | format(a.change_pct))) if a.change_pct is not none else "—" %}
+{% set price_str = ("%.2f" | format(a.price)) if a.price is not none else "—" %}
+**{{ a.ticker }}** · {{ a.role }} · {{ a.state }} · {{ price_str }} · {{ chg_str }}
+
+- **News** — {{ a.news }}
+- **Impact** — {{ a.impact }}
+- **Watch** — {{ a.watch }}
+- **Conf** — {{ a.confidence }}
+{% if a.meta %}
+
+{{ a.meta.items() | map('join', ' ') | join(' · ') }}
+{% endif %}
+
+{% endfor %}
+
+## 05 · Event Watch 事件
+
+{% if brief.events %}
+| Time | Affected | Event | Priority |
+|------|----------|-------|----------|
+{% for e in brief.events -%}
+| {{ e.time }} | {{ e.affected }} | {{ e.event }}{% if e.why %} · {{ e.why }}{% endif %} | {% if e.priority == 'HIGH' %}**{{ e.priority }}**{% else %}{{ e.priority }}{% endif %} |
+{% endfor %}
+{% else %}
+72 小时窗口内无排定催化剂。
+{% endif %}
+
+{% if brief.filtered %}
+*06 · 已过滤 {{ brief.filtered | length }} 条（逐条理由见网页存档版）。*
+{% endif %}
+
+{% set sq = brief.source_quality %}
+*07 · 来源 — {{ sq.official }} official · {{ sq.tier1 }} tier-1 · {{ sq.secondary }} secondary · {{ sq.inference }} inference · Report confidence {{ sq.report_confidence }}{% if sq.limitation %} · {{ sq.limitation }}{% endif %}*
+{% endif %}
+
+## 数据源 Data Sources
+
+- **Finnhub** — 公司新闻 + 财报日历
+- **ForexFactory** — 经济日历（预期 / 前值）
+- **SEC EDGAR** — 8-K / Form 4 / 10-Q 备案
+- **US Treasury** — 国债收益率（DGS2 / DGS10）
+- **Yahoo Finance (yfinance)** — 盘前价格 + DXY + VIX
+
+---
+
+**免责声明** — 本简报仅供参考与教育用途，不构成投资建议、要约或买卖推荐；据此操作风险自负，请自行研究（DYOR）。{% if legal.terms_url %} 完整条款：{{ legal.terms_url }}{% endif %}
+
+由 AI 基于第三方数据（Finnhub · SEC EDGAR · US Treasury · Yahoo Finance）自动生成，可能存在错误或延迟，行动前请自行核实；数据按“现状”提供，不保证准确、完整或及时。本简报覆盖你本人配置的持仓。{% if legal.methodology_url %} 方法论：{{ legal.methodology_url }}{% endif %}
+
+© {{ legal.year }} {{ legal.copyright_holder }} · 保留所有权利{% if legal.contact %} · {{ legal.contact }}{% endif %}
+{% if legal.unsubscribe_url %}
+退订 Unsubscribe：{{ legal.unsubscribe_url }}{% if legal.postal_address %} · {{ legal.postal_address }}{% endif %}
+{% endif %}
+
+END · {{ brief.mission_designator }} · Finnhub · SEC EDGAR · US Treasury · Yahoo Finance

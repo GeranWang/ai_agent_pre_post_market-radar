@@ -1,0 +1,36 @@
+# Watched tickers — the quick-edit interface.
+#
+# Copy this file to `config/tickers.yaml` and edit it. That file is gitignored,
+# because a holdings list is personal financial information.
+#
+#     cp config/tickers.example.yaml config/tickers.yaml
+#
+# Just list what you hold and what you watch. Nothing else.
+# Do NOT describe the tickers: the brief infers each holding's role, sector, and
+# what matters about it on its own. In real use the reader only knows what they
+# own — not which angle the AI should analyze.
+#
+# Edit, save, rerun `python -m src.main`. That's it.
+
+# Who this brief is for — used only for the greeting line at the top.
+owner: Your Name
+
+holdings:
+  - SPY
+  - QQQ
+
+watchlist:
+  - NVDA
+  - GOOGL
+
+# Compliance footer variables (optional). The disclaimer / AI-disclosure prose is
+# always shown; these just fill in the variable bits. The last two
+# (unsubscribe_url, postal_address) are only rendered when set — required by
+# CAN-SPAM once you send to other people, omitted in single-recipient mode.
+# legal:
+#   copyright_holder: Pre-market Radar
+#   contact: you@example.com
+#   terms_url: https://example.com/terms
+#   methodology_url: https://example.com/how-it-works
+#   unsubscribe_url: https://example.com/unsubscribe
+#   postal_address: "123 Example St, City, ST 00000"

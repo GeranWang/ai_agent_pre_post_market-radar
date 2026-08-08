@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<!--
+  brief.html.j2 — Lone Trail design (孤星) · Pre-market Radar structure
+  CSS source-of-truth: src/render/_design_reference.html
+  Design spec:         src/render/DESIGN.md
+  Before modifying: read both files above.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ brief.mission_designator }} / {{ brief.date | replace('-', '.') }} / PRE-MARKET RADAR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper:       #F4F2EC;
+    --paper-2:     #EDEAE2;
+    --ink:         #0A0908;
+    --ink-2:       #595550;
+    --ink-3:       #918C83;
+    --rule:        #D6D2C8;
+    --rule-soft:   #E5E1D6;
+    --amber:       #C8732C;
+    --amber-deep:  #8E4F1B;
+    --amber-soft:  rgba(200, 115, 44, 0.08);
+
+    --font-display: 'Inter Tight', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-body:    'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono:    'JetBrains Mono', 'SF Mono', Menlo, monospace;
+    --font-cjk:     'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: geometricPrecision;
+  }
+
+  body { padding: 80px 24px 120px; }
+
+  .sheet {
+    max-width: 720px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  /* ─────────── HEADER ─────────── */
+  .head {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 40px;
+    align-items: start;
+    padding-bottom: 64px;
+    margin-bottom: 64px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .head-greeting {
+    font-family: var(--font-display);
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--ink-2);
+    margin-bottom: 22px;
+    max-width: 30em;
+  }
+  .head-id {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    color: var(--ink-2);
+    margin-bottom: 56px;
+  }
+  .head-id .sep { color: var(--ink-3); margin: 0 8px; }
+
+  .head-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 64px;
+    line-height: 0.92;
+    letter-spacing: -0.045em;
+    margin-bottom: 8px;
+  }
+  .head-sub {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 14px;
+    letter-spacing: 0.02em;
+    color: var(--ink-2);
+  }
+  .head-coverage {
+    margin-top: 10px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    color: var(--ink-3);
+  }
+
+  /* Signal orb — signature element */
+  .signal { width: 96px; text-align: right; }
+  .signal-orb {
+    width: 80px;
+    height: 80px;
+    margin-left: auto;
+    margin-bottom: 14px;
+  }
+  .signal-orb svg { width: 100%; height: 100%; display: block; }
+  .signal-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    color: var(--ink-2);
+    line-height: 1.6;
+  }
+  .signal-label .state         { color: var(--amber); display: block; margin-top: 2px; font-weight: 500; }
+  .signal-label .state.nominal { color: var(--ink-3); font-weight: 400; }
+
+  /* ─────────── SECTION ─────────── */
+  .section { padding: 0 0 64px; }
+  .section:last-of-type { padding-bottom: 0; }
+
+  .section-head {
+    display: grid;
+    grid-template-columns: 40px 1fr auto;
+    gap: 24px;
+    align-items: baseline;
+    margin-bottom: 32px;
+  }
+  .section-num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--ink-3);
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 22px;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .section-title .cn {
+    font-family: var(--font-cjk);
+    font-weight: 400;
+    color: var(--ink-3);
+    font-size: 14px;
+    margin-left: 10px;
+    letter-spacing: 0.05em;
+  }
+  .section-meta {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--ink-3);
+  }
+
+  .section-body { padding-left: 64px; }
+
+  /* ─────────── 00 MARKET PULSE ─────────── */
+  .pulse-bias-key {
+    font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--ink-3); margin-bottom: 6px;
+  }
+  .pulse-bias-val {
+    font-family: var(--font-display); font-size: 20px; font-weight: 500;
+    letter-spacing: -0.015em; color: var(--ink); margin-bottom: 30px;
+  }
+  .pulse-themes { list-style: none; display: flex; flex-direction: column; gap: 9px; margin-bottom: 30px; }
+  .pulse-theme { display: grid; grid-template-columns: 28px 1fr; gap: 14px; align-items: baseline; }
+  .pulse-theme .n { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); letter-spacing: 0.1em; }
+  .pulse-theme .t { font-family: var(--font-body); font-size: 15px; color: var(--ink); }
+  .pulse-q-key { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 8px; }
+  .pulse-q {
+    font-family: var(--font-display); font-size: 18px; font-weight: 400; line-height: 1.45;
+    letter-spacing: -0.012em; color: var(--ink); max-width: 58ch; margin-bottom: 26px;
+  }
+  .pulse-conf { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-2); }
+  .pulse-conf .v { color: var(--ink); }
+  .pulse-caveat {
+    margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--rule);
+    font-size: 12.5px; line-height: 1.6; color: var(--ink-2); max-width: 34em;
+  }
+
+  /* ─────────── 01 PORTFOLIO READ ─────────── */
+  .pread-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 8px; }
+  .pread-posture {
+    font-family: var(--font-display); font-size: 18px; font-weight: 400; line-height: 1.45;
+    letter-spacing: -0.012em; color: var(--ink); max-width: 40em; margin-bottom: 30px;
+  }
+  .pread-ints { margin-bottom: 28px; }
+  .pread-int { font-family: var(--font-body); font-size: 15px; line-height: 1.65; color: var(--ink); max-width: 42em; margin: 0 0 12px; }
+  .pread-int .k { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-2); margin-right: 9px; }
+  .pread-int .hold { font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); margin-right: 10px; }
+  .pread-swing {
+    font-family: var(--font-display); font-size: 18px; font-weight: 400; line-height: 1.45;
+    letter-spacing: -0.012em; color: var(--ink); max-width: 42em; margin-bottom: 26px;
+  }
+  .pread-swing .cmd { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; color: var(--amber); margin-right: 11px; vertical-align: 1px; }
+
+  /* ─────────── POST-CLOSE (scorecard / movers / recap) ─────────── */
+  .score { padding: 13px 0; border-top: 1px solid var(--rule-soft); }
+  .score:first-child { border-top: none; padding-top: 0; }
+  .score-head { font-family: var(--font-body); font-size: 15px; line-height: 1.6; color: var(--ink); max-width: 44em; }
+  .score-head .v { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; color: var(--ink-2); margin-right: 9px; }
+  .score-head .v.miss { color: var(--amber); }
+  .score-body { font-family: var(--font-body); font-size: 13.5px; line-height: 1.6; color: var(--ink-3); max-width: 44em; margin-top: 4px; }
+  .score-body .k { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.12em; color: var(--ink-3); margin-right: 7px; }
+  .mover { font-family: var(--font-body); font-size: 15px; line-height: 1.6; color: var(--ink); max-width: 44em; margin-bottom: 10px; }
+  .mover .tk { font-family: var(--font-mono); font-size: 13px; color: var(--ink); margin-right: 8px; }
+  .mover .pc { font-family: var(--font-mono); font-size: 11px; color: var(--ink-2); margin-right: 10px; }
+
+  /* ─────────── 02 TELEMETRY ─────────── */
+  .telemetry {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    column-gap: 32px;
+    row-gap: 24px;
+  }
+  .tel-cell { padding-right: 16px; }
+  .tel-key {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: var(--ink-3);
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .tel-val {
+    font-family: var(--font-display);
+    font-size: 30px;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.025em;
+    margin-bottom: 8px;
+    color: var(--ink);
+  }
+  .tel-val .unit { font-size: 16px; color: var(--ink-3); font-weight: 400; margin-left: 2px; }
+  .tel-delta { font-family: var(--font-mono); font-size: 10px; color: var(--ink-2); letter-spacing: 0.04em; }
+  .tel-delta.flag { color: var(--amber); }
+  .tel-note { margin-top: 6px; font-size: 12px; line-height: 1.5; color: var(--ink-2); max-width: 22em; }
+
+  /* ─────────── 02 TOP SIGNALS ─────────── */
+  .signals { display: flex; flex-direction: column; }
+  .sig {
+    padding: 20px 0;
+    border-top: 1px solid var(--rule-soft);
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 18px;
+    align-items: baseline;
+  }
+  .sig:first-child { border-top: none; padding-top: 0; }
+  .sig:last-child  { padding-bottom: 0; }
+  .sig-rank { font-family: var(--font-mono); font-size: 13px; font-weight: 500; color: var(--amber); }
+  .sig-signal { font-family: var(--font-display); font-size: 16px; font-weight: 500; letter-spacing: -0.012em; color: var(--ink); margin-bottom: 6px; }
+  .sig-affected { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 8px; }
+  .sig-why { font-family: var(--font-body); font-size: 14px; line-height: 1.6; color: var(--ink); max-width: 62ch; margin-bottom: 8px; }
+  .sig-foot { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.04em; color: var(--ink-3); }
+  .sig-foot .sep { margin: 0 8px; color: var(--rule); }
+  .sig-foot .conf { color: var(--ink-2); }
+  .signals-empty { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; color: var(--ink-3); }
+
+  /* ─────────── 03 ASSET IMPACT ─────────── */
+  .asset-list { display: flex; flex-direction: column; }
+  .asset {
+    padding: 24px 0;
+    border-top: 1px solid var(--rule-soft);
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .asset:first-child { border-top: none; padding-top: 0; }
+  .asset:last-child  { padding-bottom: 0; }
+
+  .asset-head {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 18px;
+    align-items: baseline;
+  }
+  .asset-id { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .asset-ticker {
+    font-family: var(--font-mono);
+    font-size: 17px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+  }
+  .asset-role {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: var(--ink-3);
+    text-transform: uppercase;
+  }
+  .asset-state {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    color: var(--ink-3);
+  }
+  .asset-state.watch { color: var(--amber); }
+  .asset-state.watch::before {
+    content: '';
+    display: inline-block;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--amber);
+    margin-right: 6px;
+    vertical-align: 1px;
+  }
+  .asset-state.alert { color: var(--ink); font-weight: 500; }
+
+  .asset-price  { font-family: var(--font-mono); font-size: 14px; color: var(--ink); }
+  .asset-change { font-family: var(--font-mono); font-size: 14px; min-width: 64px; text-align: right; color: var(--ink); }
+  .asset-change.na { color: var(--ink-3); }
+  .asset-change .arr { color: var(--ink-3); margin-right: 3px; }
+
+  /* Section 03 pre-market snapshot table — borderless, hairline header only */
+  .snapshot { width: 100%; border-collapse: collapse; margin-bottom: 36px; }
+  .snapshot th {
+    font-family: var(--font-mono); font-size: 9px; font-weight: 400;
+    letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3);
+    text-align: left; padding: 0 0 8px; border-bottom: 1px solid var(--rule);
+  }
+  .snapshot th.num, .snapshot td.num { text-align: right; }
+  .snapshot td {
+    font-family: var(--font-mono); font-size: 13px; color: var(--ink);
+    padding: 9px 0; border-bottom: 1px solid var(--rule-soft);
+  }
+  .snapshot td.state { color: var(--ink-2); font-size: 11px; letter-spacing: 0.04em; }
+  /* Gains/losses are NOT colored (DESIGN.md §3.2) — direction reads from the ↑/↓ glyph + sign. */
+  .snapshot td.chg      { color: var(--ink); }
+  .snapshot td.chg.na   { color: var(--ink-3); }
+  .snapshot td.chg .arr { color: var(--ink-3); margin-right: 3px; }
+  .snapshot-note { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.04em; color: var(--ink-3); margin: -24px 0 36px; }
+
+  .ai-lines { display: flex; flex-direction: column; gap: 9px; }
+  .ai-line { display: grid; grid-template-columns: 60px 1fr; gap: 16px; align-items: baseline; }
+  .ai-key { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-3); }
+  .ai-val { font-family: var(--font-body); font-size: 14px; line-height: 1.6; color: var(--ink); max-width: 60ch; }
+  .ai-val.conf { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; color: var(--ink-2); text-transform: uppercase; }
+  .asset-meta {
+    display: flex; flex-wrap: wrap; gap: 24px;
+    font-family: var(--font-mono); font-size: 10px; color: var(--ink-3); letter-spacing: 0.08em;
+  }
+  .asset-meta strong { color: var(--ink); font-weight: 500; }
+
+  /* ─────────── 04 WATCH AFTER OPEN ─────────── */
+  .watch-list { list-style: none; display: flex; flex-direction: column; gap: 13px; }
+  .watch-item { display: grid; grid-template-columns: 28px 1fr; gap: 14px; align-items: baseline; }
+  .watch-item .n { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); letter-spacing: 0.1em; }
+  .watch-item .q { font-family: var(--font-body); font-size: 14.5px; line-height: 1.6; color: var(--ink); max-width: 62ch; }
+
+  /* ─────────── 05 EVENT WATCH ─────────── */
+  .cats { display: flex; flex-direction: column; }
+  .cat {
+    display: grid;
+    grid-template-columns: 100px 56px 1fr 56px;
+    gap: 20px;
+    padding: 14px 0;
+    border-top: 1px solid var(--rule-soft);
+    align-items: baseline;
+  }
+  .cat:first-child { border-top: none; padding-top: 0; }
+  .cat-time  { font-family: var(--font-mono); font-size: 11px; color: var(--ink-2); letter-spacing: 0.05em; }
+  .cat-tk    { font-family: var(--font-mono); font-size: 11px; color: var(--ink); font-weight: 500; }
+  .cat-desc  { font-size: 13.5px; color: var(--ink); }
+  .cat-desc .why { color: var(--ink-3); }
+  .cat-pri   { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.2em; color: var(--ink-3); text-align: right; }
+  .cat-pri.med  { color: var(--ink-2); }
+  .cat-pri.high { color: var(--amber); }
+
+  /* ─────────── 06 FILTERED (collapsible) ─────────── */
+  .filtered-section { padding: 0 0 64px; }
+  details summary {
+    list-style: none;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    color: var(--ink-3);
+    padding: 16px 0;
+    border-top: 1px solid var(--rule-soft);
+    user-select: none;
+  }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::before { content: '▶'; font-size: 7px; margin-right: 8px; }
+  details[open] summary::before { content: '▼'; }
+
+  .fil-list { list-style: none; padding-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .fil-item { font-family: var(--font-body); font-size: 13px; color: var(--ink-3); display: flex; gap: 10px; flex-wrap: wrap; }
+  .fil-hl   { color: var(--ink-2); }
+  .fil-reason { font-style: italic; }
+
+  /* ─────────── 07 SOURCE QUALITY ─────────── */
+  .srcq { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; color: var(--ink-3); }
+  .srcq .sep { margin: 0 6px; color: var(--rule); }
+  .srcq .conf-v { color: var(--ink); }
+  .srcq-limit { font-family: var(--font-body); font-style: italic; font-size: 12px; color: var(--ink-3); margin-top: 10px; max-width: 60ch; }
+
+  /* ─────────── FOOTER ─────────── */
+  .foot {
+    margin-top: 64px;
+    padding-top: 32px;
+    border-top: 1px solid var(--rule);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 20px;
+    align-items: baseline;
+  }
+  .foot-end { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.3em; color: var(--ink); }
+  .foot-src { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.15em; color: var(--ink-3); text-align: right; }
+  .foot-legal { margin-top: 20px; max-width: 62ch; }
+  .foot-legal p { font-family: var(--font-body); font-size: 11px; line-height: 1.6; color: var(--ink-3); margin: 0 0 8px; }
+  .foot-legal p.disc { color: var(--ink-2); }
+  .foot-legal a { color: var(--ink-2); }
+  .foot-legal .cpr { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.1em; color: var(--ink-3); margin-top: 12px; }
+
+  /* ─────────── RESPONSIVE ─────────── */
+  @media (max-width: 640px) {
+    body { padding: 40px 18px 80px; }
+    .head { grid-template-columns: 1fr; gap: 32px; padding-bottom: 48px; margin-bottom: 48px; }
+    .signal { width: auto; text-align: left; }
+    .signal-orb { margin-left: 0; }
+    .head-title { font-size: 44px; }
+    .section-head { grid-template-columns: 32px 1fr; gap: 16px; }
+    .section-meta { grid-column: 2; margin-top: -8px; }
+    .section-body { padding-left: 0; }
+    .telemetry { grid-template-columns: repeat(2, 1fr); row-gap: 24px; }
+    .cat { grid-template-columns: 90px 1fr; gap: 12px; }
+    .cat-tk   { grid-column: 1; }
+    .cat-desc { grid-column: 1 / -1; }
+    .cat-pri  { grid-column: 1 / -1; text-align: left; }
+  }
+</style>
+</head>
+<body>
+
+<div class="sheet">
+
+  <!-- ═════════════ HEADER ═════════════ -->
+  <header class="head">
+    <div>
+      {% set post = brief.report_type == 'postclose' %}
+      {% if greeting %}<div class="head-greeting">{{ greeting }}</div>{% endif %}
+      <div class="head-id">
+        {{ brief.mission_designator }}<span class="sep">·</span>{{ brief.date | replace('-', '.') }}<span class="sep">·</span>{{ '16:00 ET · 收盘后' if post else '09:00 ET' }}<span class="sep">·</span>DAY {{ day_number | default('—') }} / FY{{ brief.date[2:4] }}
+      </div>
+      <h1 class="head-title">{% if post %}Post-close<br>Radar{% else %}Pre-market<br>Radar{% endif %}</h1>
+      <div class="head-sub">{% if post %}{{ brief.assets | length }} assets <span class="sep">·</span> {{ brief.movers | length }} movers <span class="sep">·</span> {{ brief.scorecard | length }} 对账{% else %}{{ brief.assets | length }} assets <span class="sep">·</span> {{ brief.top_signals | length }} signals <span class="sep">·</span> {{ brief.events | length }} events{% endif %}</div>
+      {% if coverage %}<div class="head-coverage">{{ coverage }}</div>{% endif %}
+    </div>
+
+    <div class="signal">
+      <div class="signal-orb">
+        <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="40" cy="40" r="38" fill="none" stroke="#0A0908" stroke-width="0.5"/>
+          <line x1="40" y1="2"  x2="40" y2="7"  stroke="#0A0908" stroke-width="0.5"/>
+          <line x1="40" y1="73" x2="40" y2="78" stroke="#0A0908" stroke-width="0.5"/>
+          <line x1="2"  y1="40" x2="7"  y2="40" stroke="#0A0908" stroke-width="0.5"/>
+          <line x1="73" y1="40" x2="78" y2="40" stroke="#0A0908" stroke-width="0.5"/>
+          {% if brief.signal_state == 'NOMINAL' %}
+          <path d="M 40 10 A 30 30 0 0 1 70 40" fill="none" stroke="#918C83" stroke-width="0.8"/>
+          {% else %}
+          <path d="M 40 10 A 30 30 0 0 1 70 40" fill="none" stroke="#C8732C" stroke-width="0.8"/>
+          {% endif %}
+          <circle cx="40" cy="40" r="18" fill="none" stroke="#0A0908" stroke-width="0.6"/>
+          {% if brief.signal_state != 'NOMINAL' %}
+          <path d="M 40 22 A 18 18 0 0 1 40 58 L 40 40 Z" fill="#C8732C" opacity="0.85"/>
+          {% endif %}
+          <circle cx="62" cy="22" r="2" fill="#C8732C"/>
+          <circle cx="62" cy="22" r="5" fill="none" stroke="#C8732C" stroke-width="0.4" opacity="0.5"/>
+          <line x1="38" y1="40" x2="42" y2="40" stroke="#0A0908" stroke-width="0.4"/>
+          <line x1="40" y1="38" x2="40" y2="42" stroke="#0A0908" stroke-width="0.4"/>
+        </svg>
+      </div>
+      <div class="signal-label">
+        SIGNAL
+        <span class="state{% if brief.signal_state == 'NOMINAL' %} nominal{% endif %}">{{ brief.signal_state }}</span>
+      </div>
+    </div>
+  </header>
+
+  {% if post %}
+  {% set cp = brief.close_pulse %}
+  <!-- 00 CLOSE PULSE -->
+  <section class="section"><div class="section-head"><span class="section-num">00</span><h2 class="section-title">Close Pulse <span class="cn">收盘脉象</span></h2><span class="section-meta">30-SECOND READ</span></div>
+    <div class="section-body">
+      <div class="pulse-bias-key">Bias</div>
+      <div class="pulse-bias-val">{{ cp.bias }}</div>
+      <ul class="pulse-themes">{% for theme in cp.themes %}<li class="pulse-theme"><span class="n">{{ "%02d" | format(loop.index) }}</span><span class="t">{{ theme }}</span></li>{% endfor %}</ul>
+      <div class="pulse-q-key">Takeaway</div>
+      <p class="pulse-q">{{ cp.takeaway }}</p>
+      <div class="pulse-conf">Confidence <span class="v">{{ cp.confidence }}</span></div>
+      {% if cp.caveat %}<p class="pulse-caveat">{{ cp.caveat }}</p>{% endif %}
+    </div>
+  </section>
+
+  <!-- 01 SCORECARD -->
+  <section class="section"><div class="section-head"><span class="section-num">01</span><h2 class="section-title">Scorecard <span class="cn">复盘对账</span></h2><span class="section-meta">MORNING vs ACTUAL</span></div>
+    <div class="section-body">
+      {% if brief.scorecard %}{% for s in brief.scorecard %}
+      <div class="score">
+        <div class="score-head"><span class="v{% if s.verdict == '落空' %} miss{% endif %}">[{{ s.verdict }}]</span>{{ s.item }}</div>
+        <div class="score-body"><span class="k">晨报</span>{{ s.morning_view }}</div>
+        <div class="score-body"><span class="k">实际</span>{{ s.actual }}</div>
+      </div>
+      {% endfor %}{% else %}<p class="signals-empty">{{ brief.scorecard_note or '无当日晨报可对比。' }}</p>{% endif %}
+    </div>
+  </section>
+
+  <!-- 02 TELEMETRY -->
+  <section class="section"><div class="section-head"><span class="section-num">02</span><h2 class="section-title">Telemetry <span class="cn">遥测</span></h2><span class="section-meta">CLOSE</span></div>
+    <div class="section-body"><div class="telemetry">{% for t in brief.telemetry %}<div class="tel-cell"><div class="tel-key">{{ t.key }}</div><div class="tel-val">{{ t.value }}<span class="unit">{{ t.unit }}</span></div><div class="tel-delta{% if t.flag %} flag{% endif %}">{{ t.delta }}</div>{% if t.flag and t.note %}<div class="tel-note">{{ t.note }}</div>{% endif %}</div>{% endfor %}</div></div>
+  </section>
+
+  <!-- 03 MOVERS -->
+  <section class="section"><div class="section-head"><span class="section-num">03</span><h2 class="section-title">Movers <span class="cn">今日异动</span></h2></div>
+    <div class="section-body">
+      {% if brief.movers %}{% for m in brief.movers %}<p class="mover"><span class="tk">{{ m.ticker }}</span><span class="pc">{% if m.change_pct is not none %}{{ "%+.1f%%" | format(m.change_pct) }}{% endif %}</span>{{ m.note }}</p>{% endfor %}{% else %}<p class="signals-empty">今日无显著异动。</p>{% endif %}
+    </div>
+  </section>
+
+  <!-- 04 ASSET RECAP -->
+  <section class="section"><div class="section-head"><span class="section-num">04</span><h2 class="section-title">Asset Recap <span class="cn">标的复盘</span></h2><span class="section-meta">{{ brief.assets | length }} HOLDINGS</span></div>
+    <div class="section-body"><div class="asset-list">
+      {% for a in brief.assets %}
+      <div class="asset">
+        <div class="asset-head"><div class="asset-id"><span class="asset-ticker">{{ a.ticker }}</span><span class="asset-role">{{ a.role }}</span><span class="asset-state {{ a.state | lower }}">{{ a.state }}</span></div>
+          <span class="asset-price">{{ ("%.2f" | format(a.close_price)) if a.close_price is not none else "—" }}</span>
+          <span class="asset-change">{% if a.change_pct is not none %}{% if a.change_pct > 0 %}<span class="arr">↑</span>{% elif a.change_pct < 0 %}<span class="arr">↓</span>{% endif %}{{ "%+.1f%%" | format(a.change_pct) }}{% else %}—{% endif %}</span>
+        </div>
+        <div class="ai-lines">
+          <div class="ai-line"><span class="ai-key">What</span><span class="ai-val">{{ a.what_happened }}</span></div>
+          <div class="ai-line"><span class="ai-key">Read</span><span class="ai-val">{{ a.read }}</span></div>
+          <div class="ai-line"><span class="ai-key">Watch</span><span class="ai-val">{{ a.watch }}</span></div>
+          <div class="ai-line"><span class="ai-key">Conf</span><span class="ai-val conf">{{ a.confidence }}</span></div>
+        </div>
+      </div>
+      {% endfor %}
+    </div></div>
+  </section>
+
+  <!-- 05 AFTER HOURS & TOMORROW -->
+  <section class="section"><div class="section-head"><span class="section-num">05</span><h2 class="section-title">After Hours &amp; Tomorrow <span class="cn">盘后·明日</span></h2></div>
+    <div class="section-body">
+      {% if brief.after_hours %}<ul class="watch-list">{% for w in brief.after_hours %}<li class="watch-item"><span class="n">·</span><span class="q">{{ w }}</span></li>{% endfor %}</ul>{% endif %}
+      {% if brief.tomorrow %}<table class="events" style="margin-top:16px;"><tbody>{% for e in brief.tomorrow %}<tr class="evt"><td class="evt-time">{{ e.time }}</td><td class="evt-affected">{{ e.affected }}</td><td class="evt-body">{{ e.event }}{% if e.why %} · {{ e.why }}{% endif %}</td><td class="evt-pri {{ e.priority | lower }}">{{ e.priority }}</td></tr>{% endfor %}</tbody></table>{% endif %}
+      {% if not brief.after_hours and not brief.tomorrow %}<p class="signals-empty">盘后无异动，72 小时窗口内无排定催化剂。</p>{% endif %}
+    </div>
+  </section>
+
+  {% if brief.filtered %}<div class="filtered-section"><details><summary>06 · FILTERED · 已过滤 · {{ brief.filtered | length }} ITEMS</summary><ul class="fil-list">{% for item in brief.filtered %}<li class="fil-item"><span class="fil-hl">{{ item.headline }}</span><span class="fil-reason">— {{ item.reason }}</span></li>{% endfor %}</ul></details></div>{% endif %}
+  {% set sq = brief.source_quality %}
+  <div class="filtered-section"><details><summary>07 · SOURCE QUALITY · 来源 · Report confidence {{ sq.report_confidence }}</summary><div class="srcq" style="margin-top:20px;">{{ sq.official }} official <span class="sep">·</span> {{ sq.tier1 }} tier-1 <span class="sep">·</span> {{ sq.secondary }} secondary <span class="sep">·</span> {{ sq.inference }} inference <span class="sep">·</span> Report confidence <span class="conf-v">{{ sq.report_confidence }}</span></div>{% if sq.limitation %}<div class="srcq-limit">{{ sq.limitation }}</div>{% endif %}</details></div>
+
+  {% else %}
+  <!-- ═════════════ 00 — MARKET PULSE ═════════════ -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">00</span>
+      <h2 class="section-title">Market Pulse <span class="cn">脉象</span></h2>
+      <span class="section-meta">30-SECOND READ</span>
+    </div>
+    <div class="section-body">
+      <div class="pulse-bias-key">Bias</div>
+      <div class="pulse-bias-val">{{ brief.market_pulse.bias }}</div>
+      <ul class="pulse-themes">
+        {% for theme in brief.market_pulse.themes %}
+        <li class="pulse-theme"><span class="n">{{ "%02d" | format(loop.index) }}</span><span class="t">{{ theme }}</span></li>
+        {% endfor %}
+      </ul>
+      <div class="pulse-q-key">Key question</div>
+      <p class="pulse-q">{{ brief.market_pulse.key_question }}</p>
+      <div class="pulse-conf">Confidence <span class="v">{{ brief.market_pulse.confidence }}</span></div>
+      {% if brief.market_pulse.caveat %}<p class="pulse-caveat">{{ brief.market_pulse.caveat }}</p>{% endif %}
+    </div>
+  </section>
+
+  <!-- ═════════════ 01 — PORTFOLIO READ ═════════════ -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">01</span>
+      <h2 class="section-title">Portfolio Read <span class="cn">持仓合成</span></h2>
+      <span class="section-meta">CROSS-HOLDING</span>
+    </div>
+    <div class="section-body">
+      {% set pr = brief.portfolio_read %}
+      <div class="pread-posture">{{ pr.posture }}</div>
+      <div class="pread-ints">
+        {% for it in pr.interactions %}
+        <p class="pread-int"><span class="k">{{ it.kind }}</span><span class="hold">{{ it.holdings | join('·') }}</span>{{ it.note }}</p>
+        {% endfor %}
+        {% if pr.ripple %}<p class="pread-int"><span class="k">Ripple</span>{{ pr.ripple }}</p>{% endif %}
+      </div>
+      <div class="pread-swing"><span class="cmd">命门</span>{{ pr.swing }}</div>
+      {% if pr.watch %}
+      <div class="pread-label">盯盘 Watch</div>
+      <ul class="watch-list">
+        {% for w in pr.watch %}
+        <li class="watch-item"><span class="n">{{ "%02d" | format(loop.index) }}</span><span class="q">{{ w }}</span></li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- ═════════════ 02 — TELEMETRY ═════════════ -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">02</span>
+      <h2 class="section-title">Telemetry <span class="cn">遥测</span></h2>
+      <span class="section-meta">{{ generated_at | default('08:55 ET') }} SNAPSHOT</span>
+    </div>
+    <div class="section-body">
+      <div class="telemetry">
+        {% for t in brief.telemetry %}
+        <div class="tel-cell">
+          <div class="tel-key">{{ t.key }}</div>
+          <div class="tel-val">{{ t.value }}<span class="unit">{{ t.unit }}</span></div>
+          <div class="tel-delta{% if t.flag %} flag{% endif %}">{{ t.delta }}</div>
+          {% if t.flag and t.note %}<div class="tel-note">{{ t.note }}</div>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- ═════════════ 03 — TOP SIGNALS (collapsible) ═════════════ -->
+  {% if brief.top_signals %}
+  <div class="filtered-section">
+    <details>
+      <summary>03 · TOP SIGNALS · 信号 · {{ brief.top_signals | length }} CLEARED GATE</summary>
+      <div class="signals" style="margin-top:20px;">
+        {% for s in brief.top_signals %}
+        <div class="sig">
+          <span class="sig-rank">{{ s.rank }}</span>
+          <div class="sig-main">
+            <div class="sig-signal">{{ s.signal }}</div>
+            {% if s.affected %}<div class="sig-affected">{{ s.affected | join(' · ') }}</div>{% endif %}
+            <div class="sig-why">{{ s.why }}</div>
+            <div class="sig-foot">{{ s.label.source }} · {{ s.label.freshness | capitalize }} · {{ s.label.impact }} impact<span class="sep">·</span><span class="conf">Conf {{ s.confidence }}</span></div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </details>
+  </div>
+  {% endif %}
+
+  <!-- ═════════════ 03 — ASSET IMPACT ═════════════ -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">04</span>
+      <h2 class="section-title">Asset Impact <span class="cn">标的</span></h2>
+      <span class="section-meta">{{ brief.assets | length }} TRACKED</span>
+    </div>
+    <div class="section-body">
+      <table class="snapshot">
+        <thead>
+          <tr><th>Ticker</th><th>State</th><th class="num">Price</th><th class="num">Chg %</th></tr>
+        </thead>
+        <tbody>
+          {% for a in brief.assets %}
+          {% set s_chg = a.change_pct %}
+          {% if s_chg is none %}{% set s_cls = "na" %}{% elif s_chg > 0 %}{% set s_cls = "up" %}{% elif s_chg < 0 %}{% set s_cls = "down" %}{% else %}{% set s_cls = "" %}{% endif %}
+          <tr>
+            <td>{{ a.ticker }}</td>
+            <td class="state">{{ a.state }}</td>
+            <td class="num">{{ ("%.2f" | format(a.price)) if a.price is not none else "—" }}</td>
+            <td class="num chg {{ s_cls }}">{% if s_chg is none %}—{% else %}{% if s_chg > 0 %}<span class="arr">↑</span>{% elif s_chg < 0 %}<span class="arr">↓</span>{% endif %}{{ "%+.1f%%" | format(s_chg) }}{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% if brief.assets and brief.assets | selectattr('change_pct', 'none') | list | length == brief.assets | length %}
+      <p class="snapshot-note">盘前尚未开盘 · 价格为上一交易日收盘,开盘前变动暂不可用</p>
+      {% endif %}
+      <details class="asset-details">
+        <summary>逐标的详情 · {{ brief.assets | length }} assets</summary>
+        <div class="asset-list">
+        {% for a in brief.assets %}
+        {% set chg = a.change_pct %}
+        {% set price_str = ("%.2f" | format(a.price)) if a.price is not none else "—" %}
+        {% if chg is none %}{% set chg_cls = "na" %}{% else %}{% set chg_cls = "" %}{% endif %}
+        {% set state_cls = a.state | lower %}
+        <div class="asset">
+          <div class="asset-head">
+            <div class="asset-id">
+              <span class="asset-ticker">{{ a.ticker }}</span>
+              <span class="asset-role">{{ a.role }}</span>
+              <span class="asset-state {{ state_cls }}">{{ a.state }}</span>
+            </div>
+            <span class="asset-price">{{ price_str }}</span>
+            <span class="asset-change {{ chg_cls }}">{% if chg is none %}—{% else %}{% if chg > 0 %}<span class="arr">↑</span>{% elif chg < 0 %}<span class="arr">↓</span>{% endif %}{{ "%+.1f%%" | format(chg) }}{% endif %}</span>
+          </div>
+          <div class="ai-lines">
+            <div class="ai-line"><span class="ai-key">News</span><span class="ai-val">{{ a.news }}</span></div>
+            <div class="ai-line"><span class="ai-key">Impact</span><span class="ai-val">{{ a.impact }}</span></div>
+            <div class="ai-line"><span class="ai-key">Watch</span><span class="ai-val">{{ a.watch }}</span></div>
+            <div class="ai-line"><span class="ai-key">Conf</span><span class="ai-val conf">{{ a.confidence }}</span></div>
+          </div>
+          {% if a.meta %}
+          <div class="asset-meta">
+            {% for k, v in a.meta.items() %}
+            <span>{{ k }} <strong>{{ v }}</strong></span>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ═════════════ 05 — EVENT WATCH ═════════════ -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">05</span>
+      <h2 class="section-title">Event Watch <span class="cn">事件</span></h2>
+      <span class="section-meta">NEXT 72H</span>
+    </div>
+    <div class="section-body">
+      {% if brief.events %}
+      <div class="cats">
+        {% for e in brief.events %}
+        {% set pri_lower = e.priority | lower %}
+        <div class="cat">
+          <span class="cat-time">{{ e.time }}</span>
+          <span class="cat-tk">{{ e.affected }}</span>
+          <span class="cat-desc">{{ e.event }}{% if e.why %} <span class="why">· {{ e.why }}</span>{% endif %}</span>
+          <span class="cat-pri {{ pri_lower }}">{{ e.priority }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="signals-empty">72 小时窗口内无排定催化剂。</p>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- ═════════════ 06 — FILTERED (collapsible) ═════════════ -->
+  {% if brief.filtered %}
+  <div class="filtered-section">
+    <details>
+      <summary>06 · FILTERED / LOW SIGNAL · {{ brief.filtered | length }} ITEMS</summary>
+      <ul class="fil-list">
+        {% for item in brief.filtered %}
+        <li class="fil-item">
+          <span class="fil-hl">{{ item.headline }}</span>
+          <span class="fil-reason">— {{ item.reason }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+    </details>
+  </div>
+  {% endif %}
+
+  <!-- ═════════════ 07 — SOURCE QUALITY (collapsible) ═════════════ -->
+  {% set sq = brief.source_quality %}
+  <div class="filtered-section">
+    <details>
+      <summary>07 · SOURCE QUALITY · 来源 · Report confidence {{ sq.report_confidence }}</summary>
+      <div class="srcq" style="margin-top:20px;">
+        {{ sq.official }} official <span class="sep">·</span> {{ sq.tier1 }} tier-1 <span class="sep">·</span> {{ sq.secondary }} secondary <span class="sep">·</span> {{ sq.inference }} inference
+        <span class="sep">·</span> Report confidence <span class="conf-v">{{ sq.report_confidence }}</span>
+      </div>
+      {% if sq.limitation %}
+      <div class="srcq-limit">{{ sq.limitation }}</div>
+      {% endif %}
+    </details>
+  </div>
+  {% endif %}
+
+  <!-- ═════════════ DATA SOURCES (collapsible · shared) ═════════════ -->
+  <div class="filtered-section">
+    <details>
+      <summary>数据源 · DATA SOURCES</summary>
+      <ul class="fil-list">
+        <li class="fil-item"><span class="fil-hl">Finnhub</span><span class="fil-reason">— 公司新闻 + 财报日历</span></li>
+        <li class="fil-item"><span class="fil-hl">ForexFactory</span><span class="fil-reason">— 经济日历（预期 / 前值）</span></li>
+        <li class="fil-item"><span class="fil-hl">SEC EDGAR</span><span class="fil-reason">— 8-K / Form 4 / 10-Q 备案</span></li>
+        <li class="fil-item"><span class="fil-hl">US Treasury</span><span class="fil-reason">— 国债收益率（DGS2 / DGS10）</span></li>
+        <li class="fil-item"><span class="fil-hl">Yahoo Finance (yfinance)</span><span class="fil-reason">— 盘前价格 + DXY + VIX</span></li>
+      </ul>
+    </details>
+  </div>
+
+  <!-- ═════════════ FOOTER ═════════════ -->
+  <footer class="foot">
+    <div class="foot-end">END · {{ brief.mission_designator }}</div>
+    <div class="foot-src">Finnhub · SEC EDGAR · US Treasury · Yahoo Finance</div>
+  </footer>
+  <div class="foot-legal">
+    <p class="disc"><strong>免责声明</strong> · 本简报仅供参考与教育用途，不构成投资建议、要约或买卖推荐；据此操作风险自负，请自行研究（DYOR）。{% if legal.terms_url %} <a href="{{ legal.terms_url }}">完整条款</a>。{% endif %}</p>
+    <p>由 AI 基于第三方数据自动生成，可能存在错误或延迟，行动前请自行核实；数据按“现状”提供，不保证准确、完整或及时。本简报覆盖你本人配置的持仓。{% if legal.methodology_url %} <a href="{{ legal.methodology_url }}">方法论</a>。{% endif %}</p>
+    <p class="cpr">© {{ legal.year }} {{ legal.copyright_holder }} · 保留所有权利{% if legal.contact %} · {{ legal.contact }}{% endif %}{% if legal.unsubscribe_url %} · <a href="{{ legal.unsubscribe_url }}">退订 Unsubscribe</a>{% endif %}{% if legal.postal_address %} · {{ legal.postal_address }}{% endif %}</p>
+  </div>
+
+</div>
+
+</body>
+</html>

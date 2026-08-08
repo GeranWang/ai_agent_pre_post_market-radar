@@ -1,0 +1,347 @@
+{#- Email-safe MJML template for Pre-market Radar.
+    Compiled to bulletproof HTML by mrml (src/render/mjml.py).
+    Keeps the Lone Trail palette + amber restraint; fonts fall back to system
+    (Gmail blocks web fonts), and the SVG signal orb is dropped (email clients
+    strip inline SVG) — signal state is shown via the typographic label instead.
+    Design tokens mirror DESIGN.md §3. -#}
+{%- set INK   = '#0A0908' -%}
+{%- set INK2  = '#595550' -%}
+{%- set INK3  = '#918C83' -%}
+{%- set RULE  = '#D6D2C8' -%}
+{%- set RULES = '#E5E1D6' -%}
+{%- set AMBER = '#C8732C' -%}
+{%- set AMBERD= '#8E4F1B' -%}
+{%- set PAPER = '#F4F2EC' -%}
+{%- set MONO  = "'JetBrains Mono','SF Mono',Menlo,Consolas,monospace" -%}
+{%- set DISP  = "'Inter Tight',Helvetica,Arial,sans-serif" -%}
+{%- set BODY  = "'Inter',Helvetica,Arial,sans-serif" -%}
+
+{%- macro eyebrow(text) -%}
+<span style="font-family:{{ MONO }};font-size:9px;letter-spacing:2px;text-transform:uppercase;color:{{ INK3 }};">{{ text }}</span>
+{%- endmacro -%}
+
+{%- macro sechead(num, title, cn) -%}
+    <mj-text padding="0 0 12px" font-size="11px" font-family="{{ MONO }}" color="{{ INK3 }}" letter-spacing="1px" line-height="1.3">
+      {{ num }}&nbsp;&nbsp;<span style="font-family:{{ DISP }};font-size:20px;font-weight:600;color:{{ INK }};letter-spacing:-0.4px;">{{ title }}</span>&nbsp;&nbsp;<span style="color:{{ INK3 }};font-size:13px;font-weight:400;">{{ cn }}</span>
+    </mj-text>
+    <mj-divider border-width="1px" border-color="{{ RULE }}" padding="0 0 20px" />
+{%- endmacro -%}
+
+<mjml>
+  <mj-head>
+    <mj-title>Pre-market Radar · {{ brief.date }}</mj-title>
+    <mj-attributes>
+      <mj-all font-family="{{ BODY }}" />
+      <mj-text color="{{ INK }}" font-size="14px" line-height="1.6" padding="0" />
+      <mj-section background-color="{{ PAPER }}" padding="0 24px" />
+    </mj-attributes>
+    <mj-style>
+      a { color: {{ AMBERD }}; }
+      td { vertical-align: top; }
+    </mj-style>
+  </mj-head>
+
+  <mj-body background-color="{{ PAPER }}" width="640px">
+
+    {#- ───────── HEADER ───────── -#}
+    <mj-section padding="40px 24px 8px">
+      <mj-column>
+        {% if greeting %}
+        <mj-text font-family="{{ DISP }}" font-size="15px" line-height="1.5" color="{{ INK2 }}" padding="0 0 22px">
+          {{ greeting }}
+        </mj-text>
+        {% endif %}
+        {% set post = brief.report_type == 'postclose' %}
+        <mj-text font-family="{{ MONO }}" font-size="10px" letter-spacing="2px" color="{{ INK2 }}" padding="0 0 28px">
+          {{ brief.mission_designator }}&nbsp;·&nbsp;{{ brief.date | replace('-', '.') }}&nbsp;·&nbsp;{{ '16:00 ET · 收盘后' if post else '09:00 ET' }}&nbsp;·&nbsp;DAY {{ day_number | default('—') }} / FY{{ brief.date[2:4] }}
+        </mj-text>
+        <mj-text font-family="{{ DISP }}" font-size="44px" font-weight="700" color="{{ INK }}" line-height="1.0" letter-spacing="-1.6px" padding="0 0 10px">
+          {{ 'Post-close Radar' if post else 'Pre-market Radar' }}
+        </mj-text>
+        <mj-text font-family="{{ DISP }}" font-size="14px" font-weight="500" color="{{ INK2 }}" padding="0 0 6px">
+          {% if post %}{{ brief.assets | length }} assets&nbsp;·&nbsp;{{ brief.movers | length }} movers&nbsp;·&nbsp;{{ brief.scorecard | length }} 对账{% else %}{{ brief.assets | length }} assets&nbsp;·&nbsp;{{ brief.top_signals | length }} signals&nbsp;·&nbsp;{{ brief.events | length }} events{% endif %}
+        </mj-text>
+        {% if coverage %}
+        <mj-text font-family="{{ MONO }}" font-size="10px" letter-spacing="1.5px" color="{{ INK3 }}" padding="6px 0 6px">
+          {{ coverage }}
+        </mj-text>
+        {% endif %}
+        <mj-text font-family="{{ MONO }}" font-size="10px" letter-spacing="2px" color="{{ INK3 }}" padding="0 0 8px">
+          SIGNAL&nbsp;&nbsp;<span style="color:{% if brief.signal_state == 'NOMINAL' %}{{ INK3 }}{% else %}{{ AMBER }}{% endif %};font-weight:500;">{{ brief.signal_state }}</span>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section padding="0 24px"><mj-column><mj-divider border-width="1px" border-color="{{ RULE }}" padding="16px 0 8px" /></mj-column></mj-section>
+
+    {% if post %}
+    {#- ═════ POST-CLOSE SECTIONS ═════ -#}
+    {#- 00 CLOSE PULSE -#}
+    <mj-section padding="24px 24px 0"><mj-column>
+      {{ sechead('00', 'Close Pulse', '收盘脉象') }}
+      <mj-text padding="0 0 4px">{{ eyebrow('Bias') }}</mj-text>
+      <mj-text font-family="{{ DISP }}" font-size="19px" font-weight="500" color="{{ INK }}" padding="0 0 18px">{{ brief.close_pulse.bias }}</mj-text>
+      {% for theme in brief.close_pulse.themes %}
+      <mj-text padding="0 0 7px"><span style="font-family:{{ MONO }};font-size:11px;color:{{ INK3 }};">{{ "%02d" | format(loop.index) }}</span>&nbsp;&nbsp;{{ theme }}</mj-text>
+      {% endfor %}
+      <mj-text padding="14px 0 4px">{{ eyebrow('Takeaway') }}</mj-text>
+      <mj-text font-family="{{ DISP }}" font-size="17px" color="{{ INK }}" line-height="1.5" padding="0 0 16px">{{ brief.close_pulse.takeaway }}</mj-text>
+      <mj-text font-family="{{ MONO }}" font-size="10px" letter-spacing="1.5px" color="{{ INK2 }}" padding="0">CONFIDENCE&nbsp;&nbsp;<span style="color:{{ INK }};">{{ brief.close_pulse.confidence }}</span></mj-text>
+      {% if brief.close_pulse.caveat %}<mj-text font-size="12.5px" line-height="1.6" color="{{ INK2 }}" padding="14px 0 0">{{ brief.close_pulse.caveat }}</mj-text>{% endif %}
+    </mj-column></mj-section>
+
+    {#- 01 SCORECARD -#}
+    <mj-section padding="32px 24px 0"><mj-column>
+      {{ sechead('01', 'Scorecard', '复盘对账') }}
+      {% if brief.scorecard %}
+      {% for s in brief.scorecard %}
+      <mj-text padding="0 0 3px"><span style="font-family:{{ MONO }};font-size:10px;letter-spacing:1px;color:{% if s.verdict == '落空' %}{{ AMBER }}{% else %}{{ INK2 }}{% endif %};">[{{ s.verdict }}]</span>&nbsp;&nbsp;<span style="color:{{ INK }};">{{ s.item }}</span></mj-text>
+      <mj-text padding="0 0 13px 20px" font-size="13px" line-height="1.6" color="{{ INK3 }}">晨报&nbsp;{{ s.morning_view }}<br/>实际&nbsp;{{ s.actual }}</mj-text>
+      {% endfor %}
+      {% else %}
+      <mj-text color="{{ INK3 }}" font-size="13px">{{ brief.scorecard_note or '无当日晨报可对比。' }}</mj-text>
+      {% endif %}
+    </mj-column></mj-section>
+
+    {#- 02 TELEMETRY -#}
+    <mj-section padding="32px 24px 0"><mj-column>
+      {{ sechead('02', 'Telemetry', '遥测') }}
+      <mj-table font-family="{{ MONO }}" font-size="13px" cellpadding="0" padding="0">
+        <tr style="border-bottom:1px solid {{ RULE }};">
+          <th style="text-align:left;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:{{ INK3 }};font-weight:400;padding:0 0 8px;">Indicator</th>
+          <th style="text-align:right;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:{{ INK3 }};font-weight:400;padding:0 0 8px;">Value</th>
+          <th style="text-align:right;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:{{ INK3 }};font-weight:400;padding:0 0 8px;">Delta</th>
+        </tr>
+        {% for t in brief.telemetry %}
+        <tr{% if not (t.flag and t.note) %} style="border-bottom:1px solid {{ RULES }};"{% endif %}>
+          <td style="padding:9px 0;color:{{ INK }};">{{ t.key }}</td>
+          <td style="padding:9px 0;text-align:right;color:{{ INK }};">{{ t.value }}{{ t.unit }}</td>
+          <td style="padding:9px 0;text-align:right;color:{% if t.flag %}{{ AMBER }}{% else %}{{ INK2 }}{% endif %};">{{ t.delta }}</td>
+        </tr>
+        {% if t.flag and t.note %}<tr style="border-bottom:1px solid {{ RULES }};"><td colspan="3" style="padding:2px 0 10px;font-size:12px;line-height:1.5;color:{{ INK2 }};">{{ t.note }}</td></tr>{% endif %}
+        {% endfor %}
+      </mj-table>
+    </mj-column></mj-section>
+
+    {#- 03 MOVERS -#}
+    <mj-section padding="32px 24px 0"><mj-column>
+      {{ sechead('03', 'Movers', '今日异动') }}
+      {% if brief.movers %}
+      {% for m in brief.movers %}
+      <mj-text padding="0 0 9px" font-size="14px" line-height="1.55" color="{{ INK }}"><span style="font-family:{{ MONO }};font-size:13px;color:{{ INK }};">{{ m.ticker }}</span>&nbsp;<span style="font-family:{{ MONO }};font-size:11px;color:{{ INK2 }};">{% if m.change_pct is not none %}{{ "%+.1f%%" | format(m.change_pct) }}{% endif %}</span>&nbsp;&nbsp;{{ m.note }}</mj-text>
+      {% endfor %}
+      {% else %}<mj-text color="{{ INK3 }}" font-size="13px">今日无显著异动。</mj-text>{% endif %}
+    </mj-column></mj-section>
+
+    {#- 04 ASSET RECAP -#}
+    <mj-section padding="32px 24px 0"><mj-column>
+      {{ sechead('04', 'Asset Recap', '标的复盘') }}
+      {% for a in brief.assets %}
+      <mj-text padding="10px 0 4px"><span style="font-family:{{ MONO }};font-size:14px;font-weight:500;color:{{ INK }};">{{ a.ticker }}</span>&nbsp;<span style="font-family:{{ MONO }};font-size:10px;color:{{ INK3 }};">{{ a.role }} · {{ a.state }}</span>&nbsp;&nbsp;<span style="font-family:{{ MONO }};font-size:12px;color:{{ INK2 }};">{{ ("%.2f" | format(a.close_price)) if a.close_price is not none else "—" }}&nbsp;{% if a.change_pct is not none %}{{ "%+.1f%%" | format(a.change_pct) }}{% endif %}</span></mj-text>
+      <mj-text padding="0 0 2px" font-size="14px" line-height="1.55" color="{{ INK }}"><span style="font-family:{{ MONO }};font-size:9px;letter-spacing:1px;color:{{ INK3 }};">WHAT</span>&nbsp;&nbsp;{{ a.what_happened }}</mj-text>
+      <mj-text padding="0 0 2px" font-size="14px" line-height="1.55" color="{{ INK }}"><span style="font-family:{{ MONO }};font-size:9px;letter-spacing:1px;color:{{ INK3 }};">READ</span>&nbsp;&nbsp;{{ a.read }}</mj-text>
+      <mj-text padding="0 0 14px" font-size="14px" line-height="1.55" color="{{ INK }}"><span style="font-family:{{ MONO }};font-size:9px;letter-spacing:1px;color:{{ INK3 }};">WATCH</span>&nbsp;&nbsp;{{ a.watch }}&nbsp;&nbsp;<span style="font-family:{{ MONO }};font-size:10px;color:{{ INK2 }};">Conf {{ a.confidence }}</span></mj-text>
+      {% endfor %}
+    </mj-column></mj-section>
+
+    {#- 05 AFTER HOURS + TOMORROW -#}
+    <mj-section padding="32px 24px 0"><mj-column>
+      {{ sechead('05', 'After Hours & Tomorrow', '盘后·明日') }}
+      {% for w in brief.after_hours %}
+      <mj-text padding="0 0 8px" font-size="14px" line-height="1.6" color="{{ INK }}">· {{ w }}</mj-text>
+      {% endfor %}
+      {% for e in brief.tomorrow %}
+      <mj-text padding="0 0 8px"><span style="font-family:{{ MONO }};font-size:10px;color:{% if e.priority == 'HIGH' %}{{ AMBER }}{% else %}{{ INK3 }}{% endif %};">{{ e.priority }}</span>&nbsp;&nbsp;<span style="font-family:{{ MONO }};font-size:11px;color:{{ INK2 }};">{{ e.time }}</span>&nbsp;&nbsp;{{ e.event }}{% if e.why %} · {{ e.why }}{% endif %}</mj-text>
+      {% endfor %}
+      {% if not brief.after_hours and not brief.tomorrow %}<mj-text color="{{ INK3 }}" font-size="13px">盘后无异动,72 小时窗口内无排定催化剂。</mj-text>{% endif %}
+    </mj-column></mj-section>
+
+    {#- 06 FILTERED + 07 SOURCE (tail) -#}
+    <mj-section padding="32px 24px 0"><mj-column>
+      {% if brief.filtered %}<mj-text font-family="{{ MONO }}" font-size="10px" letter-spacing="0.8px" color="{{ INK3 }}" line-height="1.6">06 · 已过滤 {{ brief.filtered | length }} 条（逐条见网页存档版）</mj-text>{% endif %}
+      {% set sq = brief.source_quality %}
+      <mj-text padding="6px 0 0" font-family="{{ MONO }}" font-size="10px" letter-spacing="0.5px" color="{{ INK3 }}" line-height="1.6">07 · 来源 — {{ sq.official }} official · {{ sq.tier1 }} tier-1 · {{ sq.secondary }} secondary · {{ sq.inference }} inference · Report confidence <span style="color:{{ INK }};">{{ sq.report_confidence }}</span>{% if sq.limitation %} · {{ sq.limitation }}{% endif %}</mj-text>
+    </mj-column></mj-section>
+    {% else %}
+    {#- ───────── 00 MARKET PULSE ───────── -#}
+    <mj-section padding="24px 24px 0">
+      <mj-column>
+        {{ sechead('00', 'Market Pulse', '脉象') }}
+        <mj-text padding="0 0 4px">{{ eyebrow('Bias') }}</mj-text>
+        <mj-text font-family="{{ DISP }}" font-size="19px" font-weight="500" color="{{ INK }}" padding="0 0 18px">{{ brief.market_pulse.bias }}</mj-text>
+        {% for theme in brief.market_pulse.themes %}
+        <mj-text padding="0 0 7px"><span style="font-family:{{ MONO }};font-size:11px;color:{{ INK3 }};">{{ "%02d" | format(loop.index) }}</span>&nbsp;&nbsp;{{ theme }}</mj-text>
+        {% endfor %}
+        <mj-text padding="14px 0 4px">{{ eyebrow('Key question') }}</mj-text>
+        <mj-text font-family="{{ DISP }}" font-size="17px" color="{{ INK }}" line-height="1.5" padding="0 0 16px">{{ brief.market_pulse.key_question }}</mj-text>
+        <mj-text font-family="{{ MONO }}" font-size="10px" letter-spacing="1.5px" color="{{ INK2 }}" padding="0">CONFIDENCE&nbsp;&nbsp;<span style="color:{{ INK }};">{{ brief.market_pulse.confidence }}</span></mj-text>
+        {% if brief.market_pulse.caveat %}
+        <mj-text font-size="12.5px" line-height="1.6" color="{{ INK2 }}" padding="14px 0 0" css-class="pulse-caveat">{{ brief.market_pulse.caveat }}</mj-text>
+        {% endif %}
+      </mj-column>
+    </mj-section>
+
+    {#- ───────── 01 PORTFOLIO READ ───────── -#}
+    <mj-section padding="32px 24px 0">
+      <mj-column>
+        {{ sechead('01', 'Portfolio Read', '持仓合成') }}
+        {% set pr = brief.portfolio_read %}
+        <mj-text font-family="{{ DISP }}" font-size="17px" color="{{ INK }}" line-height="1.55" padding="0 0 20px">{{ pr.posture }}</mj-text>
+        {% for it in pr.interactions %}
+        <mj-text font-size="15px" color="{{ INK }}" line-height="1.6" padding="0 0 13px"><span style="font-family:{{ MONO }};font-size:10px;letter-spacing:1px;text-transform:uppercase;color:{{ INK2 }};">{{ it.kind }}</span>&nbsp; <span style="font-family:{{ MONO }};font-size:10px;color:{{ INK3 }};">{{ it.holdings | join('·') }}</span>&nbsp;&nbsp;{{ it.note }}</mj-text>
+        {% endfor %}
+        {% if pr.ripple %}
+        <mj-text font-size="15px" color="{{ INK }}" line-height="1.6" padding="0 0 13px"><span style="font-family:{{ MONO }};font-size:10px;letter-spacing:1px;text-transform:uppercase;color:{{ INK3 }};">RIPPLE</span>&nbsp;&nbsp;{{ pr.ripple }}</mj-text>
+        {% endif %}
+        <mj-text font-family="{{ DISP }}" font-size="17px" color="{{ INK }}" line-height="1.55" padding="6px 0 18px"><span style="font-family:{{ MONO }};font-size:11px;letter-spacing:1.5px;color:{{ AMBER }};">命门</span>&nbsp;&nbsp;{{ pr.swing }}</mj-text>
+        {% if pr.watch %}
+        <mj-text padding="0 0 6px">{{ eyebrow('盯盘 Watch') }}</mj-text>
+        {% for w in pr.watch %}
+        <mj-text padding="0 0 8px"><span style="font-family:{{ MONO }};font-size:11px;color:{{ INK3 }};">{{ "%02d" | format(loop.index) }}</span>&nbsp;&nbsp;{{ w }}</mj-text>
+        {% endfor %}
+        {% endif %}
+      </mj-column>
+    </mj-section>
+
+    {#- ───────── 02 TELEMETRY ───────── -#}
+    <mj-section padding="32px 24px 0">
+      <mj-column>
+        {{ sechead('02', 'Telemetry', '遥测') }}
+        <mj-table font-family="{{ MONO }}" font-size="13px" cellpadding="0" padding="0">
+          <tr style="border-bottom:1px solid {{ RULE }};">
+            <th style="text-align:left;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:{{ INK3 }};font-weight:400;padding:0 0 8px;">Indicator</th>
+            <th style="text-align:right;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:{{ INK3 }};font-weight:400;padding:0 0 8px;">Value</th>
+            <th style="text-align:right;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:{{ INK3 }};font-weight:400;padding:0 0 8px;">Delta</th>
+          </tr>
+          {% for t in brief.telemetry %}
+          <tr{% if not (t.flag and t.note) %} style="border-bottom:1px solid {{ RULES }};"{% endif %}>
+            <td style="padding:9px 0;color:{{ INK }};">{{ t.key }}</td>
+            <td style="padding:9px 0;text-align:right;color:{{ INK }};">{{ t.value }}{{ t.unit }}</td>
+            <td style="padding:9px 0;text-align:right;color:{% if t.flag %}{{ AMBER }}{% else %}{{ INK2 }}{% endif %};">{{ t.delta }}</td>
+          </tr>
+          {% if t.flag and t.note %}
+          <tr style="border-bottom:1px solid {{ RULES }};">
+            <td colspan="3" style="padding:2px 0 10px;font-size:12px;line-height:1.5;color:{{ INK2 }};">{{ t.note }}</td>
+          </tr>
+          {% endif %}
+          {% endfor %}
+        </mj-table>
+      </mj-column>
+    </mj-section>
+
+    {#- ───────── 02 TOP SIGNALS ───────── -#}
+    <mj-section padding="32px 24px 0">
+      <mj-column>
+        {{ sechead('03', 'Top Signals', '信号') }}
+        {% if brief.top_signals %}
+        {% for s in brief.top_signals %}
+        <mj-text padding="0 0 3px">
+          <span style="font-family:{{ MONO }};font-size:13px;font-weight:500;color:{{ AMBER }};">{{ s.rank }}</span>&nbsp;&nbsp;<span style="font-family:{{ DISP }};font-size:15px;font-weight:500;color:{{ INK }};">{{ s.signal }}</span>
+        </mj-text>
+        <mj-text padding="0 0 14px 26px" font-family="{{ MONO }}" font-size="10px" color="{{ INK3 }}">{% if s.affected %}{{ s.affected | join(' · ') }}&nbsp;&nbsp;·&nbsp;&nbsp;{% endif %}{{ s.label.source }} · {{ s.label.freshness | capitalize }} · {{ s.label.impact }}</mj-text>
+        {% endfor %}
+        {% else %}
+        <mj-text color="{{ INK3 }}" font-family="{{ MONO }}" font-size="11px">本场没有与组合相关的信号通过相关性闸门。</mj-text>
+        {% endif %}
+      </mj-column>
+    </mj-section>
+
+    {#- ───────── 03 ASSET IMPACT ───────── -#}
+    <mj-section padding="32px 24px 0">
+      <mj-column>
+        {{ sechead('04', 'Asset Impact', '标的') }}
+        <mj-table font-family="{{ MONO }}" font-size="13px" cellpadding="0" padding="0 0 28px">
+          <tr style="border-bottom:1px solid {{ RULE }};">
+            <th style="text-align:left;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:{{ INK3 }};font-weight:400;padding:0 0 8px;">Ticker</th>
+            <th style="text-align:left;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:{{ INK3 }};font-weight:400;padding:0 0 8px;">State</th>
+            <th style="text-align:right;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:{{ INK3 }};font-weight:400;padding:0 0 8px;">Price</th>
+            <th style="text-align:right;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:{{ INK3 }};font-weight:400;padding:0 0 8px;">Chg %</th>
+          </tr>
+          {% for a in brief.assets %}
+          {% set chg = a.change_pct %}
+          <tr style="border-bottom:1px solid {{ RULES }};">
+            <td style="padding:9px 0;color:{{ INK }};">{{ a.ticker }}</td>
+            <td style="padding:9px 0;color:{{ INK2 }};font-size:11px;">{{ a.state }}</td>
+            <td style="padding:9px 0;text-align:right;color:{{ INK }};">{{ ("%.2f" | format(a.price)) if a.price is not none else "—" }}</td>
+            <td style="padding:9px 0;text-align:right;color:{% if chg is none %}{{ INK3 }}{% else %}{{ INK }}{% endif %};">{% if chg is none %}—{% else %}{% if chg > 0 %}<span style="color:{{ INK3 }};">↑</span>&nbsp;{% elif chg < 0 %}<span style="color:{{ INK3 }};">↓</span>&nbsp;{% endif %}{{ "%+.1f%%" | format(chg) }}{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </mj-table>
+        {% if brief.assets and brief.assets | selectattr('change_pct', 'none') | list | length == brief.assets | length %}
+        <mj-text font-family="{{ MONO }}" font-size="10px" letter-spacing="1px" color="{{ INK3 }}" padding="0 0 22px">盘前尚未开盘 · 价格为上一交易日收盘,开盘前变动暂不可用</mj-text>
+        {% endif %}
+
+        {% for a in brief.assets %}
+        <mj-text padding="0 0 8px">
+          <span style="font-family:{{ MONO }};font-size:16px;font-weight:500;color:{{ INK }};">{{ a.ticker }}</span>&nbsp;&nbsp;{{ eyebrow(a.role) }}&nbsp;&nbsp;<span style="font-family:{{ MONO }};font-size:9px;letter-spacing:2px;color:{% if a.state == 'Watch' %}{{ AMBER }}{% elif a.state == 'Alert' %}{{ INK }}{% else %}{{ INK3 }}{% endif %};">{{ a.state }}</span>
+        </mj-text>
+        <mj-text padding="0 0 5px"><span style="font-family:{{ MONO }};font-size:9px;letter-spacing:2px;color:{{ INK3 }};">NEWS</span>&nbsp;&nbsp;{{ a.news }}</mj-text>
+        <mj-text padding="0 0 5px"><span style="font-family:{{ MONO }};font-size:9px;letter-spacing:2px;color:{{ INK3 }};">IMPACT</span>&nbsp;&nbsp;{{ a.impact }}</mj-text>
+        <mj-text padding="0 0 5px"><span style="font-family:{{ MONO }};font-size:9px;letter-spacing:2px;color:{{ INK3 }};">WATCH</span>&nbsp;&nbsp;{{ a.watch }}</mj-text>
+        <mj-text padding="0 0 22px" font-family="{{ MONO }}" font-size="10px" letter-spacing="1px" color="{{ INK2 }}">CONF&nbsp;&nbsp;{{ a.confidence }}</mj-text>
+        {% if not loop.last %}<mj-divider border-width="1px" border-color="{{ RULES }}" padding="0 0 22px" />{% endif %}
+        {% endfor %}
+      </mj-column>
+    </mj-section>
+
+    {#- ───────── 05 EVENT WATCH ───────── -#}
+    <mj-section padding="32px 24px 0">
+      <mj-column>
+        {{ sechead('05', 'Event Watch', '事件') }}
+        {% if brief.events %}
+        <mj-table font-size="13px" cellpadding="0" padding="0">
+          {% for e in brief.events %}
+          <tr style="border-bottom:1px solid {{ RULES }};">
+            <td style="padding:11px 12px 11px 0;white-space:nowrap;font-family:{{ MONO }};font-size:11px;color:{{ INK2 }};">{{ e.time }}</td>
+            <td style="padding:11px 12px 11px 0;white-space:nowrap;font-family:{{ MONO }};font-size:11px;font-weight:500;color:{{ INK }};">{{ e.affected }}</td>
+            <td style="padding:11px 12px 11px 0;color:{{ INK }};">{{ e.event }}{% if e.why %} <span style="color:{{ INK3 }};">· {{ e.why }}</span>{% endif %}</td>
+            <td style="padding:11px 0;text-align:right;white-space:nowrap;font-family:{{ MONO }};font-size:9px;letter-spacing:1.5px;color:{% if e.priority == 'HIGH' %}{{ AMBER }}{% elif e.priority == 'MED' %}{{ INK2 }}{% else %}{{ INK3 }}{% endif %};">{{ e.priority }}</td>
+          </tr>
+          {% endfor %}
+        </mj-table>
+        {% else %}
+        <mj-text color="{{ INK3 }}" font-family="{{ MONO }}" font-size="11px">72 小时窗口内无排定催化剂。</mj-text>
+        {% endif %}
+      </mj-column>
+    </mj-section>
+
+    {#- ───────── 06 FILTERED + 07 SOURCE — collapsed tail (email 无法折叠 → 单行) ───────── -#}
+    <mj-section padding="32px 24px 0">
+      <mj-column>
+        {% if brief.filtered %}
+        <mj-text font-family="{{ MONO }}" font-size="10px" letter-spacing="0.8px" color="{{ INK3 }}" line-height="1.6">06 · 已过滤 {{ brief.filtered | length }} 条（逐条理由见网页存档版）</mj-text>
+        {% endif %}
+        {% set sq = brief.source_quality %}
+        <mj-text padding="6px 0 0" font-family="{{ MONO }}" font-size="10px" letter-spacing="0.5px" color="{{ INK3 }}" line-height="1.6">07 · 来源 — {{ sq.official }} official · {{ sq.tier1 }} tier-1 · {{ sq.secondary }} secondary · {{ sq.inference }} inference · Report confidence <span style="color:{{ INK }};">{{ sq.report_confidence }}</span>{% if sq.limitation %} · {{ sq.limitation }}{% endif %}</mj-text>
+      </mj-column>
+    </mj-section>
+    {% endif %}
+
+    {#- ───────── DATA SOURCES (shared) ───────── -#}
+    <mj-section padding="32px 24px 0">
+      <mj-column>
+        <mj-text padding="0 0 10px" font-family="{{ MONO }}" font-size="9px" letter-spacing="2px" text-transform="uppercase" color="{{ INK3 }}">数据源 · Data Sources</mj-text>
+        <mj-text padding="0 0 5px" font-size="13px" color="{{ INK3 }}"><span style="color:{{ INK2 }};">Finnhub</span> — 公司新闻 + 财报日历</mj-text>
+        <mj-text padding="0 0 5px" font-size="13px" color="{{ INK3 }}"><span style="color:{{ INK2 }};">ForexFactory</span> — 经济日历(预期 / 前值)</mj-text>
+        <mj-text padding="0 0 5px" font-size="13px" color="{{ INK3 }}"><span style="color:{{ INK2 }};">SEC EDGAR</span> — 8-K / Form 4 / 10-Q 备案</mj-text>
+        <mj-text padding="0 0 5px" font-size="13px" color="{{ INK3 }}"><span style="color:{{ INK2 }};">US Treasury</span> — 国债收益率(DGS2 / DGS10)</mj-text>
+        <mj-text padding="0 0 5px" font-size="13px" color="{{ INK3 }}"><span style="color:{{ INK2 }};">Yahoo Finance (yfinance)</span> — 盘前价格 + DXY + VIX</mj-text>
+      </mj-column>
+    </mj-section>
+
+    {#- ───────── FOOTER + COMPLIANCE ───────── -#}
+    <mj-section padding="32px 24px 48px">
+      <mj-column>
+        <mj-divider border-width="1px" border-color="{{ RULE }}" padding="0 0 16px" />
+        <mj-text font-family="{{ MONO }}" font-size="10px" letter-spacing="3px" color="{{ INK }}">END · {{ brief.mission_designator }}</mj-text>
+        <mj-text padding="6px 0 14px" font-family="{{ MONO }}" font-size="9px" letter-spacing="1.5px" color="{{ INK3 }}">Finnhub · SEC EDGAR · US Treasury · Yahoo Finance</mj-text>
+        <mj-text font-size="11px" line-height="1.6" color="{{ INK2 }}"><strong>免责声明</strong> · 本简报仅供参考与教育用途，不构成投资建议、要约或买卖推荐；据此操作风险自负，请自行研究（DYOR）。{% if legal.terms_url %} <a href="{{ legal.terms_url }}" style="color:{{ INK2 }};">完整条款</a>。{% endif %}</mj-text>
+        <mj-text padding="8px 0 0" font-size="11px" line-height="1.6" color="{{ INK3 }}">由 AI 基于第三方数据自动生成，可能存在错误或延迟，行动前请自行核实；数据按“现状”提供，不保证准确、完整或及时。本简报覆盖你本人配置的持仓。{% if legal.methodology_url %} <a href="{{ legal.methodology_url }}" style="color:{{ INK3 }};">方法论</a>。{% endif %}</mj-text>
+        <mj-text padding="12px 0 0" font-family="{{ MONO }}" font-size="9px" letter-spacing="1px" color="{{ INK3 }}">© {{ legal.year }} {{ legal.copyright_holder }} · 保留所有权利{% if legal.contact %} · {{ legal.contact }}{% endif %}</mj-text>
+        {% if legal.unsubscribe_url or legal.postal_address %}
+        <mj-text padding="6px 0 0" font-family="{{ MONO }}" font-size="9px" letter-spacing="1px" color="{{ INK3 }}">{% if legal.unsubscribe_url %}<a href="{{ legal.unsubscribe_url }}" style="color:{{ INK3 }};">退订 · Unsubscribe</a>{% endif %}{% if legal.unsubscribe_url and legal.postal_address %} · {% endif %}{% if legal.postal_address %}{{ legal.postal_address }}{% endif %}</mj-text>
+        {% endif %}
+      </mj-column>
+    </mj-section>
+
+  </mj-body>
+</mjml>
