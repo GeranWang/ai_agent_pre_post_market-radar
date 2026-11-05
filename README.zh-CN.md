@@ -60,7 +60,26 @@ output/intermediate/                raw_*.json、per_asset_*.json、brief_*.json
 
 ---
 
-## 排程(macOS)
+## 云端排程(GitHub Actions)
+
+电脑关机也照常投递。工作流跑在一个单独的**私有** runner 仓库里,因为 Actions 日志会打印持仓、
+价格和简报预览,账本与 brief 也要提交回那个仓库。每次 tick 都从本仓库的 `main` 拉代码,
+所以改动推上去之后才会进云端。
+
+```bash
+brew install gh && gh auth login        # 一次性
+./scripts/cloud_runner.sh create        # 创建私有 <你>/market-radar-runner,并把 .env 和 tickers.yaml 传成 secrets
+./scripts/cloud_runner.sh run preview   # 在 GitHub 上跑完整 pipeline,不发信
+./scripts/cloud_runner.sh status        # 最近几次运行 + 发送账本
+./scripts/cloud_runner.sh secrets       # 改了 .env 或 config/tickers.yaml 之后重传
+```
+
+cron 用 UTC:`3,18,33,48 12-14 * * 1-5` 和 `7,37 21-23 * * 1-5`。夏令时和冬令时下,
+盘前首次尝试都在 08:33 ET,盘后都在 17:07 ET,之后每 15 / 30 分钟重试。每月约 390 分钟,
+在私有仓库 2000 分钟的免费额度内。模板在 `deploy/actions-runner/`。只能选一个宿主:
+云端和笔记本各有一份账本,两边都开会每份报告发两封。
+
+## 本机排程(macOS)
 
 ```bash
 ./scripts/scheduler.sh install     # 写 plist 并加载
@@ -217,6 +236,8 @@ EMAIL_TO=you@gmail.com          # --send 和排程器的默认收件人
 ```
 News/
 ├── config/tickers.yaml          标的配置
+├── deploy/actions-runner/       私有云端 runner 仓库的模板
+├── scripts/cloud_runner.sh      云端 runner:创建 / secrets / 触发 / 状态
 ├── scripts/scheduler.sh         launchd 安装 / 状态 / 日志
 ├── src/
 │   ├── main.py                  pipeline 入口 + CLI
@@ -283,7 +304,7 @@ News/
 可用:两份报告端到端直到 SMTP 投递、盘后复盘对账、相关性闸门、新闻分层、
 小盘股模式、来源分级、ETF 成分股新闻、孤星风格渲染、排程器的判定逻辑。
 
-受阻:launchd 不会自动拉起 agent(见上)。
+排程在 GitHub Actions 云端运行。笔记本上的 launchd 是备用,仍不会自动拉起(见上)。
 
 下一步:并行化 `collect`,然后做跨日连续性,让 Market Pulse 能说出较昨日有什么变化。
 

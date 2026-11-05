@@ -64,7 +64,29 @@ Everything under `output/` is gitignored and can be regenerated.
 
 ---
 
-## Scheduling (macOS)
+## Scheduling in the cloud (GitHub Actions)
+
+This keeps the briefs going while your computer is off. The workflow runs in a
+separate **private** runner repo, because Actions logs print holdings, prices and
+brief previews, and the sent ledger and briefs are committed back to it. On every
+tick it checks out this repo's `main`, so a change reaches the cloud once it's pushed.
+
+```bash
+brew install gh && gh auth login     # once
+./scripts/cloud_runner.sh create     # private <you>/market-radar-runner + secrets from .env and tickers.yaml
+./scripts/cloud_runner.sh run preview   # full pipeline on GitHub's runners, no email
+./scripts/cloud_runner.sh status     # recent runs + the sent ledger
+./scripts/cloud_runner.sh secrets    # after editing .env or config/tickers.yaml
+```
+
+Cron is UTC, `3,18,33,48 12-14 * * 1-5` and `7,37 21-23 * * 1-5`. In both EDT
+and EST the first attempt is at 08:33 ET (pre-market) or 17:07 ET (post-close),
+with retries every 15 or 30 minutes. That's about 390 runner minutes a month,
+inside the 2,000 free minutes for private repos. The template lives in
+`deploy/actions-runner/`. Use one host only: the cloud and the laptop each keep
+their own ledger, so running both sends every brief twice.
+
+## Scheduling on the laptop (macOS)
 
 ```bash
 ./scripts/scheduler.sh install     # write the plist and load it
@@ -238,6 +260,8 @@ repo, kept deliberately.
 ```
 News/
 ├── config/tickers.yaml          the tickers
+├── deploy/actions-runner/       template for the private cloud runner repo
+├── scripts/cloud_runner.sh      cloud runner: create / secrets / run / status
 ├── scripts/scheduler.sh         launchd install / status / log
 ├── src/
 │   ├── main.py                  pipeline entry + CLI
@@ -312,7 +336,8 @@ Working: both reports end to end through to SMTP delivery, the post-close scorec
 the relevance gate, news tiering, small-cap mode, source grading, ETF constituent
 news, the Lone Trail render, and the scheduler's decision logic.
 
-Blocked: launchd doesn't auto-spawn the agent (see above).
+Scheduling runs in GitHub Actions (cloud). The laptop's launchd agent is the fallback
+and still doesn't auto-spawn (see above).
 
 Next: parallelize `collect`, then cross-day continuity so Market Pulse can say what
 changed since yesterday.

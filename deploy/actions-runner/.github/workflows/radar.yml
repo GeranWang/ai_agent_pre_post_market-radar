@@ -1,0 +1,144 @@
+# Pre-market Radar — cloud scheduler (GitHub Actions).
+#
+# This file runs in a PRIVATE runner repo, never in the public code repo: run
+# logs print holdings, prices and brief previews, and the sent ledger plus the
+# briefs are committed back here. Create the runner repo with
+# `scripts/cloud_runner.sh create` in the code repo — it copies this template,
+# pushes it as a private repo and uploads .env + config/tickers.yaml as secrets.
+#
+# Same tick design as the laptop (src/autorun.py): cron fires often, autorun
+# decides in ET what is due and whether the ledger already says sent. Cron is
+# UTC and these lines cover both EDT and EST; a tick outside a window no-ops.
+#
+#   pre-market   :03 :18 :33 :48 past 12–14 UTC → first attempt 08:33 ET
+#   post-close   :07 :37         past 21–23 UTC → first attempt 17:07 ET
+#
+# Off-the-hour minutes on purpose: GitHub delays (and can drop) scheduled runs
+# at the top of the hour. A dropped tick is covered by the next one.
+name: radar
+
+on:
+  schedule:
+    - cron: "3,18,33,48 12-14 * * 1-5"
+    - cron: "7,37 21-23 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "tick = what cron does · dry-run = decide only · force = ignore the ledger · preview = run the pipeline, no email"
+        type: choice
+        options: [tick, dry-run, force, preview]
+        default: tick
+
+# One tick at a time — the job-level equivalent of autorun's fcntl lock. A newly
+# queued tick replaces an older queued one; a running pipeline is never cancelled.
+concurrency:
+  group: radar
+  cancel-in-progress: false
+
+permissions:
+  contents: write   # commit the ledger + briefs back to this repo
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50   # above autorun's own 45-min SIGALRM deadline
+    steps:
+      - name: Check configuration
+        if: vars.APP_REPO == ''
+        run: |
+          echo "::error::Repository variable APP_REPO (the public code repo, owner/name) is not set"
+          exit 1
+
+      - name: Checkout runner (state)
+        uses: actions/checkout@v5
+        with:
+          path: runner
+
+      - name: Checkout app code
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ vars.APP_REPO }}
+          ref: ${{ vars.APP_REF || 'main' }}
+          path: app
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --quiet uv
+          uv pip install --system --quiet -r app/pyproject.toml
+
+      - name: Write config from secrets
+        env:
+          SECRETS_JSON: ${{ toJSON(secrets) }}
+        run: |
+          python - <<'PY'
+          import json, os, pathlib, sys
+
+          secrets = json.loads(os.environ["SECRETS_JSON"])
+          tickers = secrets.pop("TICKERS_YAML", "")
+          if not tickers.strip():
+              sys.exit("TICKERS_YAML secret is not set — run: scripts/cloud_runner.sh secrets")
+          app = pathlib.Path("app")
+          (app / "config/tickers.yaml").write_text(tickers)
+
+          # Every other secret becomes a .env line. Empty ones are skipped: an
+          # empty EMAIL_FROM would override the SMTP_USER default with "".
+          lines = [f"{k}={json.dumps(v, ensure_ascii=False)}"
+                   for k, v in secrets.items() if k.lower() != "github_token" and v]
+          (app / ".env").write_text("\n".join(lines) + "\n")
+          PY
+
+      - name: Restore state
+        run: |
+          mkdir -p app/output/state app/output/intermediate
+          cp runner/state/autorun.json app/output/state/ 2>/dev/null || true
+          cp runner/state/intermediate/*.json app/output/intermediate/ 2>/dev/null || true
+
+      - name: Run
+        working-directory: app
+        env:
+          MODE: ${{ inputs.mode || 'tick' }}
+        run: |
+          case "$MODE" in
+            tick)    python -m src.autorun ;;
+            dry-run) python -m src.autorun --dry-run ;;
+            force)   python -m src.autorun --force ;;
+            preview) python -m src.main ;;
+            *)       echo "::error::unknown mode $MODE"; exit 1 ;;
+          esac
+
+      # always(): a failed attempt must still record its attempt count, and a
+      # "sent" that never reaches the repo would be sent again by the next tick.
+      - name: Persist state
+        if: always()
+        run: |
+          mkdir -p runner/state/intermediate
+          cp app/output/state/autorun.json runner/state/ 2>/dev/null || true
+          cp app/output/intermediate/brief_*.json runner/state/intermediate/ 2>/dev/null || true
+          cd runner
+          git add state
+          if git diff --cached --quiet; then exit 0; fi
+          git -c user.name=radar-bot -c user.email=radar-bot@users.noreply.github.com \
+            commit -q -m "state: $(date -u +%Y-%m-%dT%H:%MZ)"
+          for i in 1 2 3; do
+            git pull -q --rebase && git push -q && exit 0
+            sleep 5
+          done
+          echo "::error::could not push state — the next tick may resend"
+          exit 1
+
+      - name: Upload run output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: output-${{ github.run_id }}
+          path: |
+            app/output/*.html
+            app/output/intermediate/raw_*.json
+            app/output/intermediate/per_asset_*.json
+            app/output/logs/
+          if-no-files-found: ignore
+          retention-days: 14

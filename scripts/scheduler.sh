@@ -66,6 +66,8 @@ PLIST_EOF
     launchctl bootstrap "gui/$UID" "$PLIST"
     echo "installed: $PLIST"
     echo "ticking every 5 min → $PYTHON -m src.autorun"
+    echo "note: if the cloud runner (scripts/cloud_runner.sh) is set up, uninstall this —"
+    echo "      each host keeps its own ledger, so both would send every brief"
     ;;
 
 uninstall)
