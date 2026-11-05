@@ -72,6 +72,7 @@ brew install gh && gh auth login        # 一次性
 ./scripts/cloud_runner.sh run preview   # 在 GitHub 上跑完整 pipeline,不发信
 ./scripts/cloud_runner.sh status        # 最近几次运行 + 发送账本
 ./scripts/cloud_runner.sh secrets       # 改了 .env 或 config/tickers.yaml 之后重传
+./scripts/cloud_runner.sh sync          # 改了 deploy/actions-runner/ 之后同步到 runner 仓库
 ```
 
 cron 用 UTC:`3,18,33,48 12-14 * * 1-5` 和 `7,37 21-23 * * 1-5`。夏令时和冬令时下,

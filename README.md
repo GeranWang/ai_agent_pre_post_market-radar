@@ -77,6 +77,7 @@ brew install gh && gh auth login     # once
 ./scripts/cloud_runner.sh run preview   # full pipeline on GitHub's runners, no email
 ./scripts/cloud_runner.sh status     # recent runs + the sent ledger
 ./scripts/cloud_runner.sh secrets    # after editing .env or config/tickers.yaml
+./scripts/cloud_runner.sh sync       # after changing deploy/actions-runner/
 ```
 
 Cron is UTC, `3,18,33,48 12-14 * * 1-5` and `7,37 21-23 * * 1-5`. In both EDT
