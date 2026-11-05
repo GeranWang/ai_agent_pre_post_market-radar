@@ -9,7 +9,7 @@ the post-close brief is delivered in the evening and must not greet with 早安.
 from datetime import datetime
 from pathlib import Path
 
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from src.timeutil import now_utc, to_et
 
@@ -111,7 +111,13 @@ def render_template(template_name: str, brief, owner: str = "",
 
     The single place a Jinja environment is built — the three output formats
     differ only in which template they name and what they do with the string.
+
+    The HTML and MJML templates autoescape: brief text is LLM output built from
+    third-party headlines, so a stray `<` / `>` / `&` is data, not markup. Left
+    raw, a `>` next to CJK text made mrml panic and kill the email build. The
+    Markdown template is plain text and stays unescaped.
     """
-    env = Environment(loader=FileSystemLoader(str(TEMPLATE_DIR)), keep_trailing_newline=True)
+    env = Environment(loader=FileSystemLoader(str(TEMPLATE_DIR)), keep_trailing_newline=True,
+                      autoescape=select_autoescape(enabled_extensions=("html.j2", "mjml.j2")))
     return env.get_template(template_name).render(
         brief=brief, **build_common_context(brief, owner, legal))

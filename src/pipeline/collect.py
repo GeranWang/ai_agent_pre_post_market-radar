@@ -100,7 +100,7 @@ def collect_all(holdings_config: dict, report_date: date,
         session_quotes = []
         if report_type == "postclose":
             task = progress.add_task("Fetching session close prices (yfinance)...", total=None)
-            session_quotes = fetch_session_result(all_tickers)
+            session_quotes = fetch_session_result(all_tickers, today)
             progress.update(task, description=f"[green]✓ Close prices — {len(session_quotes)} tickers")
             progress.stop_task(task)
         else:

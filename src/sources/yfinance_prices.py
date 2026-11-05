@@ -72,8 +72,11 @@ def market_state(ref_ticker: str = "SPY") -> str | None:
         return None
 
 
-def _prev_close(t: yf.Ticker, info: dict) -> float | None:
-    """Most recent *completed* regular-session close (e.g. yesterday's close).
+def _prev_close(t: yf.Ticker, info: dict, today: date | None = None) -> float | None:
+    """Most recent *completed* regular-session close before `today` (e.g.
+    yesterday's close). `today` defaults to the ET wall clock; the post-close
+    report passes its session date instead, because its catch-up run happens
+    after midnight, when the wall-clock day is already the next one.
 
     The hard cases:
     - yfinance's info['previousClose'] means "the close before the last session",
@@ -85,7 +88,7 @@ def _prev_close(t: yf.Ticker, info: dict) -> float | None:
     pre-market (before today's open) regularMarketPrice still holds the last
     completed session's close, and regularMarketTime tells us which day it is.
     """
-    today = to_et(now_utc()).date()
+    today = today or to_et(now_utc()).date()
     rmp = info.get("regularMarketPrice")
     sess = _session_date(info)
 
@@ -99,12 +102,12 @@ def _prev_close(t: yf.Ticker, info: dict) -> float | None:
         if _is_num(v):
             return round(float(v), 2)
 
-    # Fallback: last settled (non-NaN) daily bar that isn't today's.
+    # Fallback: last settled (non-NaN) daily bar from before `today`.
     try:
         hist = t.history(period="7d", interval="1d")
         for ts in reversed(hist.index):
             bar_date = ts.date() if hasattr(ts, "date") else ts
-            if bar_date == today:
+            if bar_date >= today:
                 continue
             close = hist.loc[ts, "Close"]
             if _is_num(close):
@@ -169,27 +172,29 @@ def fetch_premarket(tickers: list[str]) -> list[PremarketQuote]:
     return results
 
 
-def fetch_session_result(tickers: list[str]) -> list[SessionResult]:
-    """Post-close: today's regular-session close + day move (+ after-hours drift).
+def fetch_session_result(tickers: list[str], session_date: date) -> list[SessionResult]:
+    """Post-close: `session_date`'s regular-session close + day move (+ after-hours drift).
 
-    After the close, `regularMarketPrice` is today's settled close and
+    After the close, `regularMarketPrice` is that session's settled close and
     `regularMarketChangePercent` is the full-day move; `postMarketPrice` (when
-    present) is the after-hours last. If the run happens before the close settles,
-    fields degrade to None (renderer shows them unavailable) rather than guessing.
+    present) is the after-hours last. These hold until the next session opens,
+    which is what makes the after-midnight catch-up run work — as long as we
+    compare against `session_date`, not the wall-clock day. If the session hasn't
+    settled (or the next one has already opened), fields degrade to None
+    (renderer shows them unavailable) rather than guessing.
     """
     results = []
     et_now = to_et(now_utc()).isoformat()
-    today = to_et(now_utc()).date()
 
     for ticker in tickers:
         try:
             t = yf.Ticker(ticker)
             info = t.info
 
-            prev_close = _prev_close(t, info)
+            prev_close = _prev_close(t, info, today=session_date)
             rmp = info.get("regularMarketPrice")
-            # A settled close only counts once today's session has traded.
-            close = rmp if (_is_num(rmp) and _session_date(info) == today) else None
+            # A settled close only counts if it belongs to the reported session.
+            close = rmp if (_is_num(rmp) and _session_date(info) == session_date) else None
 
             if close is not None and prev_close:
                 day_change = round((close - prev_close) / prev_close * 100, 2)

@@ -3,7 +3,9 @@
     Keeps the Lone Trail palette + amber restraint; fonts fall back to system
     (Gmail blocks web fonts), and the SVG signal orb is dropped (email clients
     strip inline SVG) — signal state is shown via the typographic label instead.
-    Design tokens mirror DESIGN.md §3. -#}
+    Design tokens mirror DESIGN.md §3.
+    The template autoescapes (render/context.py); the font stacks are trusted
+    constants, marked |safe so their quotes stay literal in style attributes. -#}
 {%- set INK   = '#0A0908' -%}
 {%- set INK2  = '#595550' -%}
 {%- set INK3  = '#918C83' -%}
@@ -12,9 +14,9 @@
 {%- set AMBER = '#C8732C' -%}
 {%- set AMBERD= '#8E4F1B' -%}
 {%- set PAPER = '#F4F2EC' -%}
-{%- set MONO  = "'JetBrains Mono','SF Mono',Menlo,Consolas,monospace" -%}
-{%- set DISP  = "'Inter Tight',Helvetica,Arial,sans-serif" -%}
-{%- set BODY  = "'Inter',Helvetica,Arial,sans-serif" -%}
+{%- set MONO  = "'JetBrains Mono','SF Mono',Menlo,Consolas,monospace" | safe -%}
+{%- set DISP  = "'Inter Tight',Helvetica,Arial,sans-serif" | safe -%}
+{%- set BODY  = "'Inter',Helvetica,Arial,sans-serif" | safe -%}
 
 {%- macro eyebrow(text) -%}
 <span style="font-family:{{ MONO }};font-size:9px;letter-spacing:2px;text-transform:uppercase;color:{{ INK3 }};">{{ text }}</span>
