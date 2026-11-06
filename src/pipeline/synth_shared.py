@@ -27,6 +27,7 @@ from rich.console import Console
 from src.pipeline.llm import NoToolCall, call_tool
 from src.schemas.per_asset import PerAssetSummary
 from src.schemas.raw import RawMaterial
+from src.sources.yfinance_prices import MARKET_BENCHMARK, SessionMove
 
 console = Console()
 ROOT = Path(__file__).parent.parent.parent
@@ -175,6 +176,23 @@ def macro_readings(macro) -> dict[str, tuple[str, str]]:
         "DXY":   _pct(macro.dxy, macro.dxy_prev),
         "VIX":   _pts(macro.vix, macro.vix_prev),
     }
+
+
+def recent_moves_block(raw: RawMaterial) -> str:
+    """Daily moves over the window for the market benchmark and every holding —
+    the cross-asset tape the attribution check reads. The benchmark row is there
+    whatever the user holds, so "is it just the market?" can always be asked."""
+    def moves(rows: list[SessionMove]) -> str:
+        return " · ".join(f"{r.date[5:]} {r.change_pct:+.2f}%" for r in rows
+                          if r.change_pct is not None)
+
+    lines = []
+    if raw.market_reference:
+        lines.append(f"- MARKET ({MARKET_BENCHMARK}, US equity benchmark): {moves(raw.market_reference)}")
+    for ticker, rows in raw.recent_sessions.items():
+        if rows:
+            lines.append(f"- {ticker}: {moves(rows)}")
+    return "\n".join(lines or ["(no daily closes available — do not infer cross-asset moves)"])
 
 
 def macro_releases_block(raw: RawMaterial, fallback: str) -> str:

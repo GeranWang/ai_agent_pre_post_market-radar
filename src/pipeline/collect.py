@@ -12,7 +12,7 @@ from src.sources.forexfactory import fetch_economic_calendar
 from src.sources.fred import enrich_with_actuals, latest_macro_readings
 from src.sources.macro import fetch_macro_snapshot
 from src.sources.sec_edgar import fetch_recent_filings
-from src.sources.yfinance_prices import (fetch_premarket, fetch_recent_sessions,
+from src.sources.yfinance_prices import (MARKET_BENCHMARK, fetch_premarket, fetch_recent_sessions,
                                          fetch_session_result, last_session_date)
 
 console = Console()
@@ -116,6 +116,10 @@ def collect_all(holdings_config: dict, report_date: date,
 
         task = progress.add_task("Fetching recent daily closes (yfinance)...", total=None)
         recent_sessions = fetch_recent_sessions(all_tickers, through=last_session)
+        # The market benchmark goes in even when it isn't held: the synthesis
+        # attribution check (market beta first) needs it for any portfolio.
+        market_reference = (recent_sessions.get(MARKET_BENCHMARK)
+                            or fetch_recent_sessions([MARKET_BENCHMARK], through=last_session)[MARKET_BENCHMARK])
         n_hist = sum(1 for rows in recent_sessions.values() if rows)
         progress.update(task, description=f"[green]✓ Recent daily closes — {n_hist}/{len(all_tickers)} tickers")
         progress.stop_task(task)
@@ -226,6 +230,7 @@ def collect_all(holdings_config: dict, report_date: date,
         premarket_quotes=premarket_quotes,
         session_quotes=session_quotes,
         recent_sessions=recent_sessions,
+        market_reference=market_reference,
         company_news=company_news,
         sec_filings=sec_filings,
         economic_calendar=economic_calendar,

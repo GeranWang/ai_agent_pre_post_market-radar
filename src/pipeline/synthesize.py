@@ -12,7 +12,7 @@ from src.pipeline.llm import model_for
 from src.pipeline.synth_shared import (
     CONFIDENCE, EVENT_ARRAY, FILTERED_ARRAY, MAX_TOKENS, SOURCE_QUALITY_OBJECT,
     TELEMETRY_ARRAY, call_and_validate, earnings_block, econ_block, holdings_block,
-    macro_readings, macro_releases_block, per_asset_block, save_brief,
+    macro_readings, macro_releases_block, per_asset_block, recent_moves_block, save_brief,
 )
 from src.schemas.brief import DailyBrief
 from src.schemas.per_asset import PerAssetSummary
@@ -144,6 +144,7 @@ def _build_prompt(raw: RawMaterial, summaries: dict[str, PerAssetSummary], holdi
         special_day="(to be determined by you)",
         holdings_block=holdings_block(holdings_config),
         premarket_block="\n".join(premarket_lines),
+        recent_moves_block=recent_moves_block(raw),
         macro_block="\n".join(macro_lines),
         macro_releases_block=macro_releases_block(
             raw, "(no official macro readings available — FRED key unset or fetch failed)"),

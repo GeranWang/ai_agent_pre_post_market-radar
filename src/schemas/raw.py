@@ -19,6 +19,8 @@ class RawMaterial(BaseModel):
     session_quotes: list[SessionResult] = []      # populated for post-close reports
     recent_sessions: dict[str, list[SessionMove]] = {}  # ticker → last 5 daily closes through
                                                   # last_session; dates price-action news
+    market_reference: list[SessionMove] = []      # the benchmark's same sessions, always
+                                                  # fetched — independent of the holdings
     company_news: dict[str, list[NewsItem]]       # ticker → news list
     sec_filings: dict[str, list[Filing]]          # ticker → filings list
     economic_calendar: list[EconomicEvent]

@@ -1,9 +1,13 @@
 import math
 import yfinance as yf
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pydantic import BaseModel
 
 from src.timeutil import ET, now_utc, to_et
+
+# The US equity market reference: probes session dates and market state, and is
+# always fetched as the market benchmark, whether or not the user holds it.
+MARKET_BENCHMARK = "SPY"
 
 
 def _is_num(x) -> bool:
@@ -51,7 +55,7 @@ def _session_date(info: dict):
         return None
 
 
-def last_session_date(ref_ticker: str = "SPY") -> date | None:
+def last_session_date(ref_ticker: str = MARKET_BENCHMARK) -> date | None:
     """ET date of the most recent completed regular session, read from a liquid
     reference ticker's regularMarketTime. Pre-market (before today's open) this
     is the previous trading day — ground truth for the content window, so we
@@ -62,7 +66,7 @@ def last_session_date(ref_ticker: str = "SPY") -> date | None:
         return None
 
 
-def market_state(ref_ticker: str = "SPY") -> str | None:
+def market_state(ref_ticker: str = MARKET_BENCHMARK) -> str | None:
     """Live US-equity session state from a liquid reference ticker, as Yahoo
     reports it: PREPRE / PRE / REGULAR / POST / POSTPOST / CLOSED.
 
@@ -250,7 +254,9 @@ def fetch_recent_sessions(tickers: list[str], through: date,
     for ticker in tickers:
         rows: list[SessionMove] = []
         try:
-            hist = yf.Ticker(ticker).history(period="1mo", interval="1d", auto_adjust=False)
+            hist = yf.Ticker(ticker).history(start=through - timedelta(days=sessions * 2 + 10),
+                                             end=through + timedelta(days=1),
+                                             interval="1d", auto_adjust=False)
             prev = None
             for ts, close in hist["Close"].items():
                 if ts.date() > through or not _is_num(close):
