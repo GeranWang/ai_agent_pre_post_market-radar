@@ -33,6 +33,13 @@ class SessionResult(BaseModel):
     fetched_at: str
 
 
+class SessionMove(BaseModel):
+    """One completed regular session: its close and the move vs the session before."""
+    date: str                    # YYYY-MM-DD, ET session date
+    close: float
+    change_pct: float | None     # None for the oldest session in the series
+
+
 def _session_date(info: dict):
     """Calendar date (ET) that regularMarketPrice belongs to, or None."""
     rmt = info.get("regularMarketTime")
@@ -226,3 +233,34 @@ def fetch_session_result(tickers: list[str], session_date: date) -> list[Session
             ))
 
     return results
+
+
+def fetch_recent_sessions(tickers: list[str], through: date,
+                          sessions: int = 5) -> dict[str, list[SessionMove]]:
+    """The last `sessions` completed daily closes up to and including `through`,
+    each with its move vs the prior close.
+
+    Ground truth for dating price-action news. A story is often published the day
+    after the move it describes ("gold just had its best day since August" lands
+    the next morning), and the summarizer only sees the publish date — so without
+    the real daily moves it pins yesterday's rally on today. Unadjusted closes, so
+    they match the quotes; a ticker whose history fails gets an empty list.
+    """
+    out: dict[str, list[SessionMove]] = {}
+    for ticker in tickers:
+        rows: list[SessionMove] = []
+        try:
+            hist = yf.Ticker(ticker).history(period="1mo", interval="1d", auto_adjust=False)
+            prev = None
+            for ts, close in hist["Close"].items():
+                if ts.date() > through or not _is_num(close):
+                    continue
+                close = float(close)
+                change = round((close - prev) / prev * 100, 2) if prev else None
+                rows.append(SessionMove(date=ts.date().isoformat(), close=round(close, 2),
+                                        change_pct=change))
+                prev = close
+        except Exception:
+            rows = []
+        out[ticker] = rows[-sessions:]
+    return out

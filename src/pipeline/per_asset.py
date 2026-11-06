@@ -42,6 +42,32 @@ TOOL_SCHEMA = {
 }
 
 
+def _price_action_block(ticker: str, raw: RawMaterial) -> str:
+    """The real daily moves, so price-action headlines get dated by the market
+    rather than by their publish date (see fetch_recent_sessions)."""
+    rows = raw.recent_sessions.get(ticker, [])
+    if not rows:
+        return "### Price action\n(no daily closes available — do not infer moves from headlines)"
+    post = raw.report_type == "postclose"
+    label = "today's session — the one this report recaps" if post else "latest completed session"
+    lines = ["### Price action (ground truth from market data — daily closes)"]
+    for r in rows:
+        chg = f"{r.change_pct:+.2f}%" if r.change_pct is not None else "—"
+        mark = f"  ← {label}" if r.date == raw.last_session else ""
+        lines.append(f"- {r.date}: close {r.close} ({chg}){mark}")
+    if not post:
+        q = next((q for q in raw.premarket_quotes if q.ticker == ticker), None)
+        if q and q.premarket_change_pct is not None:
+            lines.append(f"- pre-market now: {q.premarket_change_pct:+.2f}% vs the last close")
+    lines.append(
+        "Date every price-move claim with these numbers, not with a story's publish "
+        "date: a story usually lands the day AFTER the move it describes. Attribute a "
+        "move to the session whose change actually matches it, and never describe a "
+        "session with a move its number contradicts."
+    )
+    return "\n".join(lines)
+
+
 def _build_news_block(ticker: str, raw: RawMaterial) -> str:
     lines = []
 
@@ -63,18 +89,28 @@ def _build_news_block(ticker: str, raw: RawMaterial) -> str:
             f"rather than declaring 'no news'.\n"
         )
 
+    lines.append(_price_action_block(ticker, raw))
+
     session_note = (f" · latest trading session: {raw.last_session}"
                     if raw.last_session else "")
     news_items = raw.company_news.get(ticker, [])
     if news_items:
         lines.append(f"### News (report date: {raw.date} ET{session_note})")
-        lines.append(
-            f"Items span the last ~5 trading sessions, each dated. The freshest edge "
-            f"is the latest session's close ({raw.last_session or 'last close'}) → now: "
-            f"items dated ON OR AFTER {raw.last_session or 'the last session'} — "
-            f"INCLUDING weekend / overnight news dated after it — are the freshest "
-            f"PRIMARY material, NOT stale. Items dated BEFORE it are background context."
-        )
+        if raw.report_type == "postclose":
+            lines.append(
+                f"Items span the last ~5 trading sessions, each dated. This is a "
+                f"post-close recap of the {raw.date} session: items dated {raw.date} "
+                f"(including after-hours) are PRIMARY. Items dated BEFORE {raw.date} "
+                f"are background context — they describe earlier sessions."
+            )
+        else:
+            lines.append(
+                f"Items span the last ~5 trading sessions, each dated. The freshest edge "
+                f"is the latest session's close ({raw.last_session or 'last close'}) → now: "
+                f"items dated ON OR AFTER {raw.last_session or 'the last session'} — "
+                f"INCLUDING weekend / overnight news dated after it — are the freshest "
+                f"PRIMARY material, NOT stale. Items dated BEFORE it are background context."
+            )
         lines.append(
             "Each item is tagged [publisher · source_type]. source_type is "
             "PRE-COMPUTED deterministically — USE IT, do not re-grade from the "

@@ -12,7 +12,8 @@ from src.sources.forexfactory import fetch_economic_calendar
 from src.sources.fred import enrich_with_actuals, latest_macro_readings
 from src.sources.macro import fetch_macro_snapshot
 from src.sources.sec_edgar import fetch_recent_filings
-from src.sources.yfinance_prices import fetch_premarket, fetch_session_result, last_session_date
+from src.sources.yfinance_prices import (fetch_premarket, fetch_recent_sessions,
+                                         fetch_session_result, last_session_date)
 
 console = Console()
 ROOT = Path(__file__).parent.parent.parent
@@ -80,12 +81,16 @@ def collect_all(holdings_config: dict, report_date: date,
     # report_date (an ET trading day) is decided by the dispatcher, not recomputed here.
     today = report_date
     date_str = today.isoformat()
-    # Anchor = latest completed session (previous close). Resolved once here and
-    # reused both for the lookback math and as the primary-window boundary the
-    # prompts use to down-rank older sessions. _resolve_anchor normalizes the
-    # after-open / feed-down cases, so this is always a date before today.
-    last_session = _resolve_anchor(today)
-    lookback_days = _content_window_days(today, anchor=last_session)
+    # Anchor = latest completed session before today (previous close), resolved
+    # once for the lookback math. _resolve_anchor normalizes the after-open /
+    # feed-down cases, so this is always a date before today.
+    anchor = _resolve_anchor(today)
+    lookback_days = _content_window_days(today, anchor=anchor)
+    # The primary-window boundary the prompts use to down-rank older sessions.
+    # Pre-market's freshest material starts at the previous close; post-close
+    # recaps today's own session, so anything dated before today is background.
+    # (Using the anchor here made a post-close brief retell the previous session.)
+    last_session = today if report_type == "postclose" else anchor
 
     console.rule(f"[bold cyan]Collect — {date_str}")
     if lookback_days > 1:
@@ -108,6 +113,12 @@ def collect_all(holdings_config: dict, report_date: date,
             premarket_quotes = fetch_premarket(all_tickers)
             progress.update(task, description=f"[green]✓ Pre-market prices — {len(premarket_quotes)} tickers")
             progress.stop_task(task)
+
+        task = progress.add_task("Fetching recent daily closes (yfinance)...", total=None)
+        recent_sessions = fetch_recent_sessions(all_tickers, through=last_session)
+        n_hist = sum(1 for rows in recent_sessions.values() if rows)
+        progress.update(task, description=f"[green]✓ Recent daily closes — {n_hist}/{len(all_tickers)} tickers")
+        progress.stop_task(task)
 
         task = progress.add_task("Fetching economic calendar (ForexFactory)...", total=None)
         economic_calendar = enrich_with_actuals(fetch_economic_calendar(date_str), date_str)
@@ -214,6 +225,7 @@ def collect_all(holdings_config: dict, report_date: date,
         last_session=last_session.isoformat(),
         premarket_quotes=premarket_quotes,
         session_quotes=session_quotes,
+        recent_sessions=recent_sessions,
         company_news=company_news,
         sec_filings=sec_filings,
         economic_calendar=economic_calendar,
