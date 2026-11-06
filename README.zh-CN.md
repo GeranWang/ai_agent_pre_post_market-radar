@@ -164,7 +164,8 @@ DEEPSEEK_API_KEY=...
 # ANTHROPIC_API_KEY=sk-ant-...  # LLM_PROVIDER=anthropic 时
 
 FINNHUB_API_KEY=...             # 公司新闻 + 财报日历
-FRED_API_KEY=...                # 可选,补全已公布的 actual 值
+FRED_API_KEY=...                # 可选:PCE / 零售销售的 actual,其余数据的兜底
+# BLS_API_KEY=...               # 可选:BLS API 每日额度从 25 次提到 500 次
 SEC_USER_AGENT=YourApp you@example.com   # SEC 要求 UA 里带联系方式
 
 SMTP_HOST=smtp.gmail.com
@@ -215,7 +216,8 @@ EMAIL_TO=you@gmail.com          # --send 和排程器的默认收件人
 | yfinance(ETF 档案) | 基金分类和前十大持仓 | `sources/etf.py` | 否 |
 | 来源分级 | 新闻等级判定,在预处理阶段算出 | `sources/source_grade.py` | 否 |
 | ForexFactory(faireconomy XML) | 经济日历:日程、预期、前值 | `sources/forexfactory.py` | 否 |
-| FRED | 关键美国数据的已公布 actual,以及最新官方读数 | `sources/fred.py` | 是(免费,可选) |
+| BLS 公共数据 API | CPI、PPI、非农报告的 actual,发布即可取 | `sources/bls.py` | 否(可选免费 key) |
+| FRED | PCE、零售销售的 actual,BLS 数据的兜底,最新官方读数 | `sources/fred.py` | 是(免费,可选) |
 | 美国财政部 + yfinance | 2 年/10 年期收益率、美元指数、VIX | `sources/macro.py` | 否 |
 | yfinance | 盘前和收盘报价、`marketState` | `sources/yfinance_prices.py` | 否 |
 | SEC EDGAR | 8-K、Form 4、10-Q | `sources/sec_edgar.py` | 否 |

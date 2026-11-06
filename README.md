@@ -178,7 +178,8 @@ DEEPSEEK_API_KEY=...
 # ANTHROPIC_API_KEY=sk-ant-...  # if LLM_PROVIDER=anthropic
 
 FINNHUB_API_KEY=...             # company news + earnings
-FRED_API_KEY=...                # optional, fills in released `actual` values
+FRED_API_KEY=...                # optional: PCE / retail-sales actuals, fallback for the rest
+# BLS_API_KEY=...               # optional: lifts the BLS API from 25 to 500 queries/day
 SEC_USER_AGENT=YourApp you@example.com   # SEC requires a contact in the UA
 
 SMTP_HOST=smtp.gmail.com
@@ -236,7 +237,8 @@ All free.
 | yfinance (ETF profile) | Fund category and top holdings | `sources/etf.py` | No |
 | Source grading | News-tier classification, computed in preprocessing | `sources/source_grade.py` | No |
 | ForexFactory (faireconomy XML) | Economic calendar: schedule, forecast, previous | `sources/forexfactory.py` | No |
-| FRED | Released actuals for key US releases, plus latest official readings | `sources/fred.py` | Yes (free, optional) |
+| BLS Public Data API | CPI, PPI and jobs-report actuals at release time | `sources/bls.py` | No (free key optional) |
+| FRED | PCE and retail-sales actuals, fallback for BLS series, latest official readings | `sources/fred.py` | Yes (free, optional) |
 | US Treasury + yfinance | 2Y/10Y yields, DXY, VIX | `sources/macro.py` | No |
 | yfinance | Pre-market and close quotes, `marketState` | `sources/yfinance_prices.py` | No |
 | SEC EDGAR | 8-K, Form 4, 10-Q | `sources/sec_edgar.py` | No |

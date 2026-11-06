@@ -142,7 +142,7 @@ def collect_all(holdings_config: dict, report_date: date,
         progress.update(task, description=f"[green]✓ Macro snapshot — {status}")
         progress.stop_task(task)
 
-        task = progress.add_task("Fetching latest macro releases (FRED)...", total=None)
+        task = progress.add_task("Fetching latest macro releases (BLS/FRED)...", total=None)
         macro_releases = latest_macro_readings()
         progress.update(task, description=f"[green]✓ Macro releases — {len(macro_releases)} official readings")
         progress.stop_task(task)

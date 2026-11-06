@@ -22,7 +22,7 @@ context only, not as today's headline material.
 ## Macro snapshot
 {{macro_block}}
 
-## Latest official macro releases (FRED — authoritative)
+## Latest official macro releases (BLS / FRED — authoritative)
 These are the most recently *released* official US readings (with reference month).
 When you refer to any of these indicators (CPI, PPI, PCE, payrolls, unemployment,
 retail sales), cite THE FIGURE HERE and label its source `Official` — even if a news

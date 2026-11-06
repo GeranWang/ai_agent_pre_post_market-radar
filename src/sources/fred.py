@@ -1,16 +1,20 @@
-"""Fill the released `actual` on economic-calendar events using FRED.
+"""Fill the released `actual` on economic-calendar events from official data.
 
 The ForexFactory feed gives schedule + estimate + previous but never the
 released value. FMP's calendar (which carries `actual`) moved behind a paid plan
-in 2025, so for the *free* path we read the actual from FRED: the underlying
-BLS/BEA series update on release day, so at 9:00 ET the latest observation is
-the 8:30 print. We compute the headline transform (m/m %, y/y %, level, or the
-monthly change) per series and attach it to the matching US calendar event.
+in 2025, so for the *free* path we read the actual from the series themselves
+and compute the headline transform (m/m %, y/y %, level, or the monthly change)
+per series, then attach it to the matching US calendar event.
+
+Series are keyed by their FRED id. BLS-origin series (CPI, PPI, jobs report)
+are read from the BLS API first, because FRED's copy lags the 8:30 ET release
+by up to ~2 h (see `bls.py`); FRED covers BEA's PCE and Census's retail sales
+(measured lags +13 / +8 min) and is the fallback for everything.
 
 This only enriches a small set of high-impact US macro releases (the ones that
 actually move a US-equity portfolio). Everything else keeps `actual=None`.
 
-No FRED key → events pass through unchanged (estimate/previous still present).
+No FRED key → BLS series still resolve; the FRED-only ones stay `actual=None`.
 
 NOTE: the series ids + transforms below must be verified live against known
 headline prints — SA vs NSA matters (BLS reports CPI m/m seasonally adjusted but
@@ -23,6 +27,7 @@ from datetime import date, datetime
 import httpx
 from pydantic import BaseModel
 
+from src.sources import bls
 from src.sources.forexfactory import EconomicEvent
 from src.timeutil import now_utc, to_et
 
@@ -49,9 +54,51 @@ _RULES: list[tuple[tuple[str, ...], str, str]] = [
     (("non-farm", "employment"), "PAYEMS", "mom_diff_k"),  # NFP change
     (("nonfarm", "payroll"),     "PAYEMS", "mom_diff_k"),
     (("unemployment", "rate"),   "UNRATE", "level_pct"),
+    (("average", "hourly", "earnings", "m/m"), "CES0500000003", "mom_pct"),  # AHE, total private, SA
     (("core", "retail", "m/m"),  "RSFSXMV", "mom_pct"),  # retail sales ex-autos
     (("retail", "sales", "m/m"), "RSAFS",   "mom_pct"),  # retail sales
 ]
+
+
+# FRED id → the BLS series it mirrors. Each pair was checked value-for-value
+# against FRED (Sep 2026 prints, 2026-11-06); AHE's m/m also matches the feed's
+# `previous` (+0.1%).
+_BLS_MIRROR = {
+    "CPIAUCSL": "CUSR0000SA0",         # CPI-U all items, SA
+    "CPIAUCNS": "CUUR0000SA0",         # CPI-U all items, NSA
+    "CPILFESL": "CUSR0000SA0L1E",      # core CPI, SA
+    "CPILFENS": "CUUR0000SA0L1E",      # core CPI, NSA
+    "PPIFIS":   "WPSFD4",              # PPI final demand, SA
+    "PPIFES":   "WPSFD49104",          # PPI final demand less foods & energy, SA
+    "PAYEMS":   "CES0000000001",       # total nonfarm employment, SA (thousands)
+    "UNRATE":   "LNS14000000",         # unemployment rate, SA
+    "CES0500000003": "CES0500000003",  # average hourly earnings, total private, SA
+}
+
+
+def _load(series_ids: list[str], key: str) -> dict[str, tuple[str, list[tuple[date, float]]]]:
+    """FRED id → (source, observations newest first). BLS-mirrored series come
+    from one batched BLS query; FRED (when keyed) fills whatever BLS didn't return
+    and is the only source for the rest. A series with no data is absent."""
+    wanted = list(dict.fromkeys(series_ids))
+    mirrored = any(sid in _BLS_MIRROR for sid in wanted)
+    from_bls = bls.fetch_series(sorted(_BLS_MIRROR.values())) if mirrored else {}  # one query serves every caller
+    out: dict[str, tuple[str, list[tuple[date, float]]]] = {}
+    for sid in wanted:
+        obs = from_bls.get(_BLS_MIRROR.get(sid, ""))
+        if obs:
+            out[sid] = ("BLS", obs)
+            continue
+        if not key:
+            continue
+        try:
+            obs = _observations(sid, key)
+        except Exception as e:
+            print(f"[fred] {sid}: {e} — skipping")
+            continue
+        if obs:
+            out[sid] = ("FRED", obs)
+    return out
 
 
 def _observations(series_id: str, key: str) -> list[tuple[date, float]]:
@@ -111,34 +158,29 @@ _READINGS: list[tuple[str, str, str]] = [
 
 
 class MacroReading(BaseModel):
-    label: str       # human label, e.g. "CPI y/y"
-    value: str       # formatted headline figure, e.g. "4.5%"
-    ref_month: str   # reference month of the reading, "YYYY-MM"
-    series_id: str   # FRED series the value came from
+    label: str            # human label, e.g. "CPI y/y"
+    value: str            # formatted headline figure, e.g. "4.5%"
+    ref_month: str        # reference month of the reading, "YYYY-MM"
+    series_id: str        # FRED id of the series (the key, whichever source served it)
+    source: str = "FRED"  # "BLS" | "FRED" — where the value was actually read
 
 
 def latest_macro_readings() -> list[MacroReading]:
     """Latest *official* reading for each tracked US release (with its reference
-    month), regardless of whether it's on today's calendar. No key → empty."""
+    month), regardless of whether it's on today's calendar."""
     key = os.environ.get("FRED_API_KEY", "").strip()
-    if not key:
-        return []
-
-    cache: dict[str, list[tuple[date, float]]] = {}
+    series = _load([sid for _, sid, _ in _READINGS], key)
     out: list[MacroReading] = []
     for label, series_id, transform in _READINGS:
-        try:
-            if series_id not in cache:
-                cache[series_id] = _observations(series_id, key)
-            obs = cache[series_id]
-            value = _apply(transform, obs)
-            if value is not None and obs:
-                out.append(MacroReading(
-                    label=label, value=value,
-                    ref_month=obs[0][0].strftime("%Y-%m"), series_id=series_id,
-                ))
-        except Exception as e:
-            print(f"[fred] reading {series_id} ({label}): {e} — skipping")
+        if series_id not in series:
+            continue
+        source, obs = series[series_id]
+        value = _apply(transform, obs)
+        if value is not None:
+            out.append(MacroReading(
+                label=label, value=value, ref_month=obs[0][0].strftime("%Y-%m"),
+                series_id=series_id, source=source,
+            ))
     return out
 
 
@@ -151,34 +193,31 @@ def _match(title: str) -> tuple[str, str] | None:
 
 
 def enrich_with_actuals(events: list[EconomicEvent], date: str) -> list[EconomicEvent]:
-    """Attach `actual` to matching US events from FRED. No key → unchanged."""
+    """Attach `actual` to matching US events (BLS first, then FRED)."""
     key = os.environ.get("FRED_API_KEY", "").strip()
-    if not key:
+    hits = {i: _match(ev.event) for i, ev in enumerate(events)
+            if ev.country == "US" and ev.actual is None}
+    hits = {i: h for i, h in hits.items() if h is not None}
+    if not hits:
         return events
+    series = _load([sid for sid, _ in hits.values()], key)
 
     try:
         target = datetime.strptime(date, "%Y-%m-%d").date()
     except (ValueError, TypeError):
         target = to_et(now_utc()).date()   # was naive datetime.now() — a latent bug
 
-    cache: dict[str, list[tuple[date, float]]] = {}
-    for ev in events:
-        if ev.country != "US" or ev.actual is not None:
+    for i, (series_id, transform) in hits.items():
+        if series_id not in series:
             continue
-        hit = _match(ev.event)
-        if hit is None:
-            continue
-        series_id, transform = hit
-        try:
-            if series_id not in cache:
-                cache[series_id] = _observations(series_id, key)
-            obs = cache[series_id]
-            # These releases all report the *prior* calendar month, so a fresh
-            # print's reference month is target_month − 1. If FRED's latest
-            # observation is older, today's number isn't ingested yet — skip it
-            # rather than mislabel last month's value as today's actual.
-            if obs and obs[0][0] >= _prior_month(target):
-                ev.actual = _apply(transform, obs)
-        except Exception as e:
-            print(f"[fred] {series_id} for '{ev.event}': {e} — leaving actual empty")
+        source, obs = series[series_id]
+        # These releases all report the *prior* calendar month, so a fresh
+        # print's reference month is target_month − 1. If the latest
+        # observation is older, today's number isn't out yet — skip it
+        # rather than mislabel last month's value as today's actual.
+        if obs[0][0] >= _prior_month(target):
+            events[i].actual = _apply(transform, obs)
+        else:
+            print(f"[{source.lower()}] {series_id} for '{events[i].event}': latest is "
+                  f"{obs[0][0]:%Y-%m}, today's print not out yet — leaving actual empty")
     return events

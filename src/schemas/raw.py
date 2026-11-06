@@ -26,6 +26,6 @@ class RawMaterial(BaseModel):
     economic_calendar: list[EconomicEvent]
     earnings_calendar: list[EarningsEvent]
     macro_snapshot: MacroSnapshot
-    macro_releases: list[MacroReading] = []       # latest official BLS/BEA prints (FRED)
+    macro_releases: list[MacroReading] = []       # latest official BLS/BEA prints (BLS API, FRED)
     etf_profiles: dict[str, ETFProfile] = {}      # ticker → ETF theme + top holdings
                                                   # (empty for non-ETF holdings)

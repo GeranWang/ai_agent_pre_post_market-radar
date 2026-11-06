@@ -196,8 +196,8 @@ def recent_moves_block(raw: RawMaterial) -> str:
 
 
 def macro_releases_block(raw: RawMaterial, fallback: str) -> str:
-    """Latest official readings (FRED), which override any news-quoted figure."""
-    lines = [f"- {r.label}: {r.value} (ref month {r.ref_month}, FRED {r.series_id})"
+    """Latest official readings (BLS / FRED), which override any news-quoted figure."""
+    lines = [f"- {r.label}: {r.value} (ref month {r.ref_month}, {r.source})"
              for r in raw.macro_releases]
     return "\n".join(lines or [fallback])
 

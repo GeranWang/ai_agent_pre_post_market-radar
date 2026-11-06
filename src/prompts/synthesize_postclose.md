@@ -17,7 +17,7 @@ pre-market brief exists, grades its calls. It is **information, not advice**.
 ## Macro snapshot (close readings — use EXACTLY for telemetry)
 {{macro_block}}
 
-## Latest official macro releases (FRED — authoritative; override any news-quoted number)
+## Latest official macro releases (BLS / FRED — authoritative; override any news-quoted number)
 {{macro_releases_block}}
 
 ## Economic calendar (today — released actuals where available)

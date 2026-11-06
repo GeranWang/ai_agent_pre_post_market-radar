@@ -147,7 +147,7 @@ def _build_prompt(raw: RawMaterial, summaries: dict[str, PerAssetSummary], holdi
         recent_moves_block=recent_moves_block(raw),
         macro_block="\n".join(macro_lines),
         macro_releases_block=macro_releases_block(
-            raw, "(no official macro readings available — FRED key unset or fetch failed)"),
+            raw, "(no official macro readings available — BLS and FRED both unavailable)"),
         econ_block=econ_block(raw, [
             "⚠ NO ECONOMIC CALENDAR DATA available for today (source returned nothing).",
             "DO NOT invent CPI, NFP, PCE, FOMC, or any scheduled release or its figures.",
