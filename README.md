@@ -87,6 +87,11 @@ inside the 2,000 free minutes for private repos. The template lives in
 `deploy/actions-runner/`. Use one host only: the cloud and the laptop each keep
 their own ledger, so running both sends every brief twice.
 
+GitHub's cron is unreliable in practice: on the runner's first day 2 of 18 ticks
+fired, each 4–5 hours late. For on-time delivery, point an external cron at the
+`workflow_dispatch` API; the setup is in `deploy/actions-runner/README.md`
+("On-time triggers").
+
 ## Scheduling on the laptop (macOS)
 
 ```bash

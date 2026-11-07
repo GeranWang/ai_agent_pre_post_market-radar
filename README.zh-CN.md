@@ -80,6 +80,10 @@ cron 用 UTC:`3,18,33,48 12-14 * * 1-5` 和 `7,37 21-23 * * 1-5`。夏令时和�
 在私有仓库 2000 分钟的免费额度内。模板在 `deploy/actions-runner/`。只能选一个宿主:
 云端和笔记本各有一份账本,两边都开会每份报告发两封。
 
+GitHub 的 cron 实际上很不可靠:runner 上线第一天 18 个 tick 只触发了 2 个,都晚了 4–5 小时。
+要准时投递,用外部 cron 调 `workflow_dispatch` API,配置见 `deploy/actions-runner/README.md`
+的 "On-time triggers" 一节。
+
 ## 本机排程(macOS)
 
 ```bash

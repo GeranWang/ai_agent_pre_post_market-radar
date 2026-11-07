@@ -4,8 +4,10 @@ FRED re-publishes these series, but its copy lands well after the 8:30 ET
 release: measured lags were CPI +38 min, payrolls +54 min, PPI +110 min (FRED
 `last_updated`, Oct 2026), and one CPI day still showed the old month at 11:50
 ET. The first pre-market tick runs at ~08:33 ET, so FRED alone almost never has
-today's print in time. BLS's own API carries it at release time, so BLS series
-are read here first and FRED is the fallback.
+today's print in time. BLS's own API carries it at release time — on 2026-11-06
+the 08:33 ET cloud run read October payrolls from BLS while FRED ingested them
+at 10:43 ET (+133 min) — so BLS series are read here first and FRED is the
+fallback.
 
 Keyless v1 allows 25 queries/day and 25 series per query; a free BLS_API_KEY
 switches to v2 (500/day, 50 series), which matters on shared cloud runner IPs.
