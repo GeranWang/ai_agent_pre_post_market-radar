@@ -19,6 +19,7 @@ label lines from the values computed here. Sharing computation is a fix;
 sharing prose would be a bug waiting to happen.
 """
 import json
+import re
 from pathlib import Path
 
 from pydantic import BaseModel, ValidationError
@@ -195,9 +196,35 @@ def recent_moves_block(raw: RawMaterial) -> str:
     return "\n".join(lines or ["(no daily closes available — do not infer cross-asset moves)"])
 
 
+_SCALED = re.compile(r"([+-]?)(\d+(?:\.\d+)?)([KMBT])")
+_TO_WAN = {"K": 0.1, "M": 100, "B": 100_000, "T": 100_000_000}   # one unit, in 万
+
+
+def cn_units(value: str | None) -> str | None:
+    """Gloss a K/M/B/T figure with its Chinese 万/亿 amount: "65K" → "65K（6.5万）".
+
+    The model converted these itself and got it wrong (65K written as 65万 next to
+    a correct 165K → 16.5万), so the conversion is done here and the prompt says to
+    copy it. Anything that isn't a bare scaled number passes through unchanged."""
+    if not value:
+        return value
+    m = _SCALED.fullmatch(value.strip())
+    if not m:
+        return value
+    sign, num, unit = m.groups()
+    wan = float(num) * _TO_WAN[unit]
+    if wan >= 100_000_000:
+        amount, suffix = wan / 100_000_000, "万亿"
+    elif wan >= 10_000:
+        amount, suffix = wan / 10_000, "亿"
+    else:
+        amount, suffix = wan, "万"
+    return f"{value}（{sign}{f'{amount:.2f}'.rstrip('0').rstrip('.')}{suffix}）"
+
+
 def macro_releases_block(raw: RawMaterial, fallback: str) -> str:
     """Latest official readings (BLS / FRED), which override any news-quoted figure."""
-    lines = [f"- {r.label}: {r.value} (ref month {r.ref_month}, {r.source})"
+    lines = [f"- {r.label}: {cn_units(r.value)} (ref month {r.ref_month}, {r.source})"
              for r in raw.macro_releases]
     return "\n".join(lines or [fallback])
 
@@ -209,9 +236,9 @@ def econ_block(raw: RawMaterial, fallback: list[str], show_impact: bool = True) 
                 if e.impact in ("high", "medium", "3") or e.country == "US"]
     for e in relevant[:20]:
         imp = (f" [{e.impact.upper()}]" if e.impact else "") if show_impact else ""
-        actual = f" actual={e.actual}" if e.actual else ""
-        estimate = f" est={e.estimate}" if e.estimate else ""
-        prev = f" prev={e.previous}" if e.previous else ""
+        actual = f" actual={cn_units(e.actual)}" if e.actual else ""
+        estimate = f" est={cn_units(e.estimate)}" if e.estimate else ""
+        prev = f" prev={cn_units(e.previous)}" if e.previous else ""
         lines.append(f"- {e.time or 'TBD'} ET {e.country}: {e.event}{imp}{actual}{estimate}{prev}")
     return "\n".join(lines or fallback)
 
